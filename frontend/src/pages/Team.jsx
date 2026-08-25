@@ -1,0 +1,4 @@
+import { CircleUserRound, Camera, MessageCircle } from "lucide-react";
+import { clothingImages } from "../data/products";
+
+export default function Team() { return <div className="px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]"><h1 className="mb-12 text-center text-[32px] font-bold leading-10">Meet Our Team</h1><div className="mx-auto flex max-w-[1050px] flex-wrap justify-center gap-x-4 gap-y-12">{[...clothingImages, ...clothingImages.slice(0, 2)].map((image, index) => <article key={`${image}-${index}`} className="w-full max-w-[316px] text-center"><img src={image} alt="Team member" className="aspect-[1.37] w-full object-cover" /><div className="flex flex-col items-center gap-2 p-6"><h2 className="text-sm font-bold">Username</h2><p className="text-xs font-bold text-[#737373]">Profession</p><div className="flex gap-4 text-[#23a6f0]"><CircleUserRound size={16} /><Camera size={16} /><MessageCircle size={16} /></div></div></article>)}</div></div>; }

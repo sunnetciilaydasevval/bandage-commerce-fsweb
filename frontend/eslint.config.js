@@ -26,7 +26,6 @@ export default defineConfig([
     },
     plugins: {
       'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
