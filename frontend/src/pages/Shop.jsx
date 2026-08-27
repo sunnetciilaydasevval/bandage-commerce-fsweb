@@ -1,6 +1,352 @@
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+
 import ProductCard from "../components/ProductCard";
-import { products, clothingImages } from "../data/products";
+import { fetchProducts } from "../redux/thunks/productThunk";
+
+const LIMIT = 25;
 
 export default function Shop() {
-    return <div className="bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]"><div className="mx-auto flex max-w-[1050px] flex-col gap-10"><div className="flex flex-wrap justify-center gap-2 md:justify-between">{clothingImages.slice(0, 5).map((image) => <div key={image} className="relative h-[170px] w-[calc(50%-4px)] max-w-[200px] overflow-hidden md:h-[220px] md:flex-1"><img src={image} alt="Clothing category" className="h-full w-full object-cover" /><div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 text-white"><strong className="text-base">CLOTHS</strong><span className="text-xs">5 Items</span></div></div>)}</div><div className="flex items-center justify-between border-y border-[#ececec] py-6 text-xs text-[#737373]"><span>Showing all 12 results</span><div className="flex gap-3"><button type="button" className="border border-[#ececec] px-4 py-2">Popularity⌄</button><button type="button" className="bg-[#23a6f0] px-5 py-2 font-bold text-white">Filter</button></div></div><div className="flex flex-wrap justify-center gap-4">{[...products, ...products.slice(0, 4)].map((product, index) => <ProductCard key={`${product.id}-${index}`} product={{ ...product, id: index + 1, image: clothingImages[index % clothingImages.length] }} />)}</div><div className="flex justify-center pt-8"><div className="flex border border-[#ececec] text-xs"><button type="button" className="px-4 py-3 text-[#bdbdbd]">First</button><button type="button" className="bg-[#23a6f0] px-4 py-3 font-bold text-white">1</button><button type="button" className="px-4 py-3">2</button><button type="button" className="px-4 py-3">3</button><button type="button" className="px-4 py-3 text-[#23a6f0]">Next</button></div></div></div></div>;
+    const dispatch = useDispatch();
+
+    const { categoryId } = useParams();
+
+    const {
+        productList,
+        total,
+        fetchState,
+        categories,
+    } = useSelector((state) => state.product);
+
+    const [filter, setFilter] = useState("");
+    const [sort, setSort] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const category = categoryId
+        ? Number(categoryId)
+        : undefined;
+
+    const selectedCategory = categories.find(
+        (item) => item.id === category
+    );
+
+    const offset = (currentPage - 1) * LIMIT;
+
+    const totalPages = Math.ceil(total / LIMIT);
+
+    /*
+     * URL'deki kategori değişirse
+     * tekrar ilk sayfaya dön.
+     */
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [category]);
+
+    /*
+     * Category / filter / sort / pagination
+     * değiştiğinde API isteği gönder.
+     */
+    useEffect(() => {
+        dispatch(
+            fetchProducts({
+                category,
+                filter,
+                sort,
+                limit: LIMIT,
+                offset,
+            })
+        );
+    }, [
+        dispatch,
+        category,
+        filter,
+        sort,
+        offset,
+    ]);
+
+    const handleFilterChange = (event) => {
+        setFilter(event.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (event) => {
+        setSort(event.target.value);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page) => {
+        if (
+            page < 1 ||
+            page > totalPages ||
+            page === currentPage
+        ) {
+            return;
+        }
+
+        setCurrentPage(page);
+    };
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+
+        let startPage = Math.max(
+            1,
+            currentPage - 2
+        );
+
+        let endPage = Math.min(
+            totalPages,
+            startPage + maxVisiblePages - 1
+        );
+
+        if (
+            endPage - startPage <
+            maxVisiblePages - 1
+        ) {
+            startPage = Math.max(
+                1,
+                endPage - maxVisiblePages + 1
+            );
+        }
+
+        for (
+            let page = startPage;
+            page <= endPage;
+            page++
+        ) {
+            pages.push(page);
+        }
+
+        return pages;
+    };
+
+    return (
+        <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
+
+            <div className="mx-auto max-w-[1050px]">
+
+                {/* PAGE HEADER */}
+                <div className="mb-10 text-center">
+
+                    <h1 className="mb-3 text-[24px] font-bold">
+                        {selectedCategory
+                            ? selectedCategory.title
+                            : "SHOP"}
+                    </h1>
+
+                    <p className="text-sm text-[#737373]">
+                        {selectedCategory
+                            ? `${selectedCategory.gender === "k"
+                                ? "Kadın"
+                                : "Erkek"
+                            } / ${selectedCategory.title}`
+                            : "Explore our products"}
+                    </p>
+
+                </div>
+
+                {/* FILTER / SORT */}
+                <div className="mb-10 flex flex-col gap-4 border-y border-[#ececec] py-6 md:flex-row md:items-center md:justify-between">
+
+                    <p className="text-sm font-bold text-[#737373]">
+                        Showing{" "}
+                        {productList.length}{" "}
+                        of{" "}
+                        {total} results
+                    </p>
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+
+                        {/* FILTER */}
+                        <input
+                            type="text"
+                            value={filter}
+                            onChange={handleFilterChange}
+                            placeholder="Search products..."
+                            className="border border-[#ececec] px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
+                        />
+
+                        {/* SORT */}
+                        <select
+                            value={sort}
+                            onChange={handleSortChange}
+                            className="border border-[#ececec] bg-white px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
+                        >
+                            <option value="">
+                                Sort
+                            </option>
+
+                            <option value="price:asc">
+                                Price: Low to High
+                            </option>
+
+                            <option value="price:desc">
+                                Price: High to Low
+                            </option>
+
+                            <option value="rating:asc">
+                                Rating: Low to High
+                            </option>
+
+                            <option value="rating:desc">
+                                Rating: High to Low
+                            </option>
+                        </select>
+
+                    </div>
+                </div>
+
+                {/* LOADING */}
+                {fetchState === "FETCHING" && (
+                    <div className="flex min-h-[300px] items-center justify-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
+                    </div>
+                )}
+
+                {/* ERROR */}
+                {fetchState === "FAILED" && (
+                    <div className="py-20 text-center text-red-500">
+                        Products could not be loaded.
+                    </div>
+                )}
+
+                {/* PRODUCTS */}
+                {fetchState !== "FETCHING" &&
+                    fetchState !== "FAILED" && (
+                        <>
+                            {productList.length === 0 ? (
+                                <div className="py-20 text-center text-[#737373]">
+                                    No products found.
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap justify-center gap-4">
+                                    {productList.map(
+                                        (product) => (
+                                            <ProductCard
+                                                key={product.id}
+                                                product={{
+                                                    ...product,
+                                                    image:
+                                                        product.images?.[0]?.url,
+                                                }}
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                {/* PAGINATION */}
+                {totalPages > 1 &&
+                    fetchState !== "FETCHING" && (
+                        <div className="flex justify-center pt-12">
+
+                            <div className="flex flex-wrap border border-[#ececec] text-xs">
+
+                                {/* FIRST */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(1)
+                                    }
+                                    disabled={currentPage === 1}
+                                    className={`px-4 py-3 ${currentPage === 1
+                                        ? "cursor-not-allowed text-[#bdbdbd]"
+                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                        }`}
+                                >
+                                    First
+                                </button>
+
+                                {/* PREVIOUS */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            currentPage - 1
+                                        )
+                                    }
+                                    disabled={currentPage === 1}
+                                    className={`px-4 py-3 ${currentPage === 1
+                                        ? "cursor-not-allowed text-[#bdbdbd]"
+                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                        }`}
+                                >
+                                    Previous
+                                </button>
+
+                                {/* PAGE NUMBERS */}
+                                {getPageNumbers().map(
+                                    (page) => (
+                                        <button
+                                            key={page}
+                                            type="button"
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    page
+                                                )
+                                            }
+                                            className={`px-4 py-3 ${page ===
+                                                currentPage
+                                                ? "bg-[#23a6f0] font-bold text-white"
+                                                : "text-[#252b42] hover:bg-[#f5f5f5]"
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    )
+                                )}
+
+                                {/* NEXT */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            currentPage + 1
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages
+                                    }
+                                    className={`px-4 py-3 ${currentPage ===
+                                        totalPages
+                                        ? "cursor-not-allowed text-[#bdbdbd]"
+                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                        }`}
+                                >
+                                    Next
+                                </button>
+
+                                {/* LAST */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            totalPages
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages
+                                    }
+                                    className={`px-4 py-3 ${currentPage ===
+                                        totalPages
+                                        ? "cursor-not-allowed text-[#bdbdbd]"
+                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                        }`}
+                                >
+                                    Last
+                                </button>
+
+                            </div>
+                        </div>
+                    )}
+
+            </div>
+        </div>
+    );
 }

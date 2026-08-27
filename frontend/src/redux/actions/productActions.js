@@ -32,3 +32,13 @@ export const setFilter = (filter) => ({
     type: "PRODUCT_SET_FILTER",
     payload: filter,
 });
+
+export const setSort = (sort) => ({
+    type: "PRODUCT_SET_SORT",
+    payload: sort,
+});
+
+export const setCategory = (category) => ({
+    type: "PRODUCT_SET_CATEGORY",
+    payload: category,
+});

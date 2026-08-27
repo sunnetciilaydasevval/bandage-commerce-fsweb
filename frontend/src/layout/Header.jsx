@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+
 import {
     Phone,
     Mail,
@@ -9,7 +11,9 @@ import {
     Heart,
     Menu,
     X,
+    ChevronDown,
 } from "lucide-react";
+
 import {
     FaInstagram,
     FaYoutube,
@@ -25,33 +29,66 @@ const navItems = [
     ["About", "/about"],
 ];
 
+function createCategoryUrl(category) {
+    const gender =
+        category.gender === "k"
+            ? "kadin"
+            : "erkek";
+
+    const categoryName = category.title
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ı/g, "i")
+        .replace(/ğ/g, "g")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ö/g, "o")
+        .replace(/ç/g, "c")
+        .replace(/\s+/g, "-");
+
+    return `/shop/${gender}/${categoryName}/${category.id}`;
+}
+
 export default function Header() {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] =
+        useState(false);
+
+    const [isCategoryOpen, setIsCategoryOpen] =
+        useState(false);
+
+    const [mobileCategoryOpen, setMobileCategoryOpen] =
+        useState(false);
+
+    const categories = useSelector(
+        (state) => state.product.categories || []
+    );
+
+    const womenCategories = categories.filter(
+        (category) => category.gender === "k"
+    );
+
+    const menCategories = categories.filter(
+        (category) => category.gender === "e"
+    );
 
     const closeMobileMenu = () => {
         setIsMobileMenuOpen(false);
+        setMobileCategoryOpen(false);
     };
 
     return (
         <header className="w-full bg-white font-['Montserrat',sans-serif]">
-            {/* Top Bar */}
+
+            {/* TOP BAR */}
             <div className="flex min-h-16 flex-col items-center justify-center gap-2 bg-[#252b42] px-4 py-3 text-center text-[11px] font-bold leading-4 tracking-[0.2px] text-white sm:flex-row sm:justify-between sm:px-6 lg:px-10 lg:py-2 lg:text-[14px] lg:leading-6">
+
                 <div className="hidden items-center gap-4 lg:flex">
                     <span className="flex items-center gap-1">
-                        <Phone
-                            size={16}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <Phone size={16} />
                         (225) 555-0118
                     </span>
 
                     <span className="flex items-center gap-1">
-                        <Mail
-                            size={16}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <Mail size={16} />
                         michelle.rivera@example.com
                     </span>
                 </div>
@@ -68,7 +105,7 @@ export default function Header() {
                         aria-label="Instagram"
                         className="transition-opacity hover:opacity-70"
                     >
-                        <FaInstagram size={16} aria-hidden="true" />
+                        <FaInstagram size={16} />
                     </a>
 
                     <a
@@ -76,7 +113,7 @@ export default function Header() {
                         aria-label="YouTube"
                         className="transition-opacity hover:opacity-70"
                     >
-                        <FaYoutube size={16} aria-hidden="true" />
+                        <FaYoutube size={16} />
                     </a>
 
                     <a
@@ -84,7 +121,7 @@ export default function Header() {
                         aria-label="Facebook"
                         className="transition-opacity hover:opacity-70"
                     >
-                        <FaFacebookF size={15} aria-hidden="true" />
+                        <FaFacebookF size={15} />
                     </a>
 
                     <a
@@ -92,14 +129,15 @@ export default function Header() {
                         aria-label="Twitter"
                         className="transition-opacity hover:opacity-70"
                     >
-                        <FaTwitter size={16} aria-hidden="true" />
+                        <FaTwitter size={16} />
                     </a>
                 </div>
             </div>
 
-            {/* Main Navigation */}
+            {/* MAIN NAVIGATION */}
             <nav className="mx-auto flex min-h-[82px] max-w-[1438px] items-start justify-between px-6 py-6 lg:items-center lg:px-8 lg:py-3">
-                {/* Logo */}
+
+                {/* LOGO */}
                 <Link
                     to="/"
                     onClick={closeMobileMenu}
@@ -108,8 +146,9 @@ export default function Header() {
                     BrandName
                 </Link>
 
-                {/* Desktop Navigation */}
-                <div className="hidden items-center gap-4 lg:flex">
+                {/* DESKTOP NAVIGATION */}
+                <div className="hidden items-center gap-5 lg:flex">
+
                     {navItems.map(([label, href]) => (
                         <Link
                             key={label}
@@ -119,73 +158,157 @@ export default function Header() {
                             {label}
                         </Link>
                     ))}
+
+                    {/* CATEGORIES */}
+                    <div
+                        className="relative"
+                        onMouseEnter={() =>
+                            setIsCategoryOpen(true)
+                        }
+                        onMouseLeave={() =>
+                            setIsCategoryOpen(false)
+                        }
+                    >
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setIsCategoryOpen(
+                                    (current) => !current
+                                )
+                            }
+                            className="flex items-center gap-1 text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] hover:text-[#23a6f0]"
+                        >
+                            Categories
+
+                            <ChevronDown
+                                size={15}
+                                className={`transition-transform ${isCategoryOpen
+                                        ? "rotate-180"
+                                        : ""
+                                    }`}
+                            />
+                        </button>
+
+                        {isCategoryOpen && (
+                            <div className="absolute left-1/2 top-full z-50 w-[430px] -translate-x-1/2 pt-3">
+                                <div className="grid grid-cols-2 gap-8 rounded-md border border-[#eeeeee] bg-white p-6 shadow-lg">
+
+                                    {/* WOMEN */}
+                                    <div>
+                                        <h3 className="mb-4 text-sm font-bold text-[#252b42]">
+                                            Kadın
+                                        </h3>
+
+                                        <div className="flex flex-col gap-3">
+                                            {womenCategories.map(
+                                                (category) => (
+                                                    <Link
+                                                        key={
+                                                            category.id
+                                                        }
+                                                        to={createCategoryUrl(
+                                                            category
+                                                        )}
+                                                        onClick={() =>
+                                                            setIsCategoryOpen(
+                                                                false
+                                                            )
+                                                        }
+                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                    >
+                                                        {
+                                                            category.title
+                                                        }
+                                                    </Link>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* MEN */}
+                                    <div>
+                                        <h3 className="mb-4 text-sm font-bold text-[#252b42]">
+                                            Erkek
+                                        </h3>
+
+                                        <div className="flex flex-col gap-3">
+                                            {menCategories.map(
+                                                (category) => (
+                                                    <Link
+                                                        key={
+                                                            category.id
+                                                        }
+                                                        to={createCategoryUrl(
+                                                            category
+                                                        )}
+                                                        onClick={() =>
+                                                            setIsCategoryOpen(
+                                                                false
+                                                            )
+                                                        }
+                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                    >
+                                                        {
+                                                            category.title
+                                                        }
+                                                    </Link>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Desktop Actions */}
+                {/* DESKTOP ACTIONS */}
                 <div className="hidden items-center gap-1 lg:flex">
+
                     <Link
                         to="/signup"
-                        className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold leading-6 tracking-[0.2px] text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
-                        <UserRound
-                            size={16}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <UserRound size={16} />
                         Login / Register
                     </Link>
 
                     <button
                         type="button"
                         aria-label="Search"
-                        className="rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        className="rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
-                        <Search
-                            size={18}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <Search size={18} />
                     </button>
 
                     <button
                         type="button"
                         aria-label="Shopping cart"
-                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
-                        <ShoppingCart
-                            size={18}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <ShoppingCart size={18} />
                         <span className="text-xs">1</span>
                     </button>
 
                     <button
                         type="button"
                         aria-label="Favorites"
-                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
-                        <Heart
-                            size={18}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <Heart size={18} />
                         <span className="text-xs">1</span>
                     </button>
                 </div>
 
-                {/* Mobile Actions */}
+                {/* MOBILE ACTIONS */}
                 <div className="flex items-center gap-5 lg:hidden">
+
                     <button
                         type="button"
                         aria-label="Search"
                         className="p-0 text-[#252b42]"
                     >
-                        <Search
-                            size={22}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <Search size={22} />
                     </button>
 
                     <button
@@ -193,11 +316,7 @@ export default function Header() {
                         aria-label="Shopping cart"
                         className="p-0 text-[#252b42]"
                     >
-                        <ShoppingCart
-                            size={22}
-                            strokeWidth={2}
-                            aria-hidden="true"
-                        />
+                        <ShoppingCart size={22} />
                     </button>
 
                     <button
@@ -216,35 +335,120 @@ export default function Header() {
                         className="p-0 text-[#252b42]"
                     >
                         {isMobileMenuOpen ? (
-                            <X
-                                size={24}
-                                strokeWidth={2}
-                                aria-hidden="true"
-                            />
+                            <X size={24} />
                         ) : (
-                            <Menu
-                                size={24}
-                                strokeWidth={2}
-                                aria-hidden="true"
-                            />
+                            <Menu size={24} />
                         )}
                     </button>
                 </div>
             </nav>
 
-            {/* Mobile Navigation */}
+            {/* MOBILE NAVIGATION */}
             {isMobileMenuOpen && (
-                <div className="flex flex-col items-center gap-[30px] border-t border-[#eeeeee] px-4 pb-12 pt-5 text-center text-[30px] font-normal leading-[45px] tracking-[0.2px] text-[#737373] lg:hidden">
-                    {navItems.map(([label, href]) => (
-                        <Link
-                            key={label}
-                            to={href}
-                            onClick={closeMobileMenu}
-                            className="transition-colors hover:text-[#23a6f0]"
-                        >
-                            {label}
-                        </Link>
-                    ))}
+                <div className="border-t border-[#eeeeee] px-4 pb-10 pt-5 lg:hidden">
+
+                    <div className="flex flex-col items-center gap-6 text-center">
+
+                        {navItems.map(([label, href]) => (
+                            <Link
+                                key={label}
+                                to={href}
+                                onClick={closeMobileMenu}
+                                className="text-[24px] leading-8 text-[#737373] hover:text-[#23a6f0]"
+                            >
+                                {label}
+                            </Link>
+                        ))}
+
+                        <div className="w-full max-w-[350px]">
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setMobileCategoryOpen(
+                                        (current) => !current
+                                    )
+                                }
+                                className="mx-auto flex items-center gap-2 text-[24px] leading-8 text-[#737373]"
+                            >
+                                Categories
+
+                                <ChevronDown
+                                    size={20}
+                                    className={`transition-transform ${mobileCategoryOpen
+                                            ? "rotate-180"
+                                            : ""
+                                        }`}
+                                />
+                            </button>
+
+                            {mobileCategoryOpen && (
+                                <div className="mt-6 grid grid-cols-2 gap-8 text-left">
+
+                                    {/* WOMEN */}
+                                    <div>
+                                        <h3 className="mb-4 text-sm font-bold text-[#252b42]">
+                                            Kadın
+                                        </h3>
+
+                                        <div className="flex flex-col gap-3">
+                                            {womenCategories.map(
+                                                (category) => (
+                                                    <Link
+                                                        key={
+                                                            category.id
+                                                        }
+                                                        to={createCategoryUrl(
+                                                            category
+                                                        )}
+                                                        onClick={
+                                                            closeMobileMenu
+                                                        }
+                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                    >
+                                                        {
+                                                            category.title
+                                                        }
+                                                    </Link>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* MEN */}
+                                    <div>
+                                        <h3 className="mb-4 text-sm font-bold text-[#252b42]">
+                                            Erkek
+                                        </h3>
+
+                                        <div className="flex flex-col gap-3">
+                                            {menCategories.map(
+                                                (category) => (
+                                                    <Link
+                                                        key={
+                                                            category.id
+                                                        }
+                                                        to={createCategoryUrl(
+                                                            category
+                                                        )}
+                                                        onClick={
+                                                            closeMobileMenu
+                                                        }
+                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                    >
+                                                        {
+                                                            category.title
+                                                        }
+                                                    </Link>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </header>
