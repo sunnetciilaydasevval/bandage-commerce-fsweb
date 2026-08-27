@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { getRoles, signup } from "../api/auth";
+import { useDispatch, useSelector } from "react-redux";
+
+import { signup } from "../api/auth";
+import { getRoles } from "../redux/thunks/clientThunks";
 
 function SignUp() {
-    const [roles, setRoles] = useState([]);
-    const [rolesLoading, setRolesLoading] = useState(true);
-    const [rolesError, setRolesError] = useState("");
     const [submitError, setSubmitError] = useState("");
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    const roles = useSelector(
+        (state) => state.client.roles
+    );
 
     const {
         register,
@@ -33,50 +38,37 @@ function SignUp() {
         },
     });
 
+
     /*
-     * Fetch roles
+     * Fetch roles only when they are not already
+     * available in Redux store.
      */
     useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                setRolesLoading(true);
-                setRolesError("");
+        if (roles.length === 0) {
+            dispatch(getRoles());
+        }
+    }, [dispatch, roles.length]);
 
-                const response = await getRoles();
+    /*
+     * Select customer role by default
+     * after roles are loaded.
+     */
+    useEffect(() => {
+        if (roles.length === 0) {
+            return;
+        }
 
-                const fetchedRoles = response.data;
+        const customerRole = roles.find(
+            (role) => role.code === "customer"
+        );
 
-                setRoles(fetchedRoles);
-
-                /*
-                 * Customer is selected by default.
-                 */
-                const customerRole = fetchedRoles.find(
-                    (role) => role.code === "customer"
-                );
-
-                if (customerRole) {
-                    setValue(
-                        "role_id",
-                        String(customerRole.id)
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "Roles could not be fetched:",
-                    error
-                );
-
-                setRolesError(
-                    "Roles could not be loaded. Please refresh the page and try again."
-                );
-            } finally {
-                setRolesLoading(false);
-            }
-        };
-
-        fetchRoles();
-    }, [setValue]);
+        if (customerRole) {
+            setValue(
+                "role_id",
+                String(customerRole.id)
+            );
+        }
+    }, [roles, setValue]);
 
     /*
      * Selected role
@@ -95,50 +87,50 @@ function SignUp() {
      * Submit signup form
      */
     const onSubmit = async (data) => {
-        setSubmitError("");
-
-        /*
-         * passwordValidation is only for frontend
-         * validation. It must NOT be sent to backend.
-         */
-        const {
-            passwordValidation,
-            ...formData
-        } = data;
-
-        /*
-         * Backend expects role_id as a number.
-         */
-        formData.role_id = Number(formData.role_id);
-
-        /*
-         * Customer/Admin:
-         * {
-         *   name,
-         *   email,
-         *   password,
-         *   role_id
-         * }
-         *
-         * Store:
-         * {
-         *   name,
-         *   email,
-         *   password,
-         *   role_id,
-         *   store: {
-         *     name,
-         *     phone,
-         *     tax_no,
-         *     bank_account
-         *   }
-         * }
-         */
-        if (!isStore) {
-            delete formData.store;
-        }
-
         try {
+            /*
+             * passwordValidation is only for frontend
+             * validation. It must NOT be sent to backend.
+             */
+            const {
+                passwordValidation,
+                ...formData
+            } = data;
+
+            /*
+             * Backend expects role_id as a number.
+             */
+            formData.role_id = Number(
+                formData.role_id
+            );
+
+            /*
+             * Customer/Admin:
+             * {
+             *   name,
+             *   email,
+             *   password,
+             *   role_id
+             * }
+             *
+             * Store:
+             * {
+             *   name,
+             *   email,
+             *   password,
+             *   role_id,
+             *   store: {
+             *     name,
+             *     phone,
+             *     tax_no,
+             *     bank_account
+             *   }
+             * }
+             */
+            if (!isStore) {
+                delete formData.store;
+            }
+
             const response = await signup(formData);
 
             console.log(
@@ -190,21 +182,6 @@ function SignUp() {
             }}
         >
             <h1>Sign Up</h1>
-
-            {/* Roles error */}
-            {rolesError && (
-                <div
-                    style={{
-                        color: "#b00020",
-                        backgroundColor: "#ffe5e5",
-                        padding: "10px",
-                        marginBottom: "20px",
-                        borderRadius: "4px",
-                    }}
-                >
-                    {rolesError}
-                </div>
-            )}
 
             {/* Signup error */}
             {submitError && (
@@ -425,7 +402,7 @@ function SignUp() {
                     <select
                         id="role_id"
                         disabled={
-                            rolesLoading ||
+                            roles.length === 0 ||
                             isSubmitting
                         }
                         {...register("role_id", {
@@ -440,7 +417,7 @@ function SignUp() {
                         }}
                     >
                         <option value="">
-                            {rolesLoading
+                            {roles.length === 0
                                 ? "Loading roles..."
                                 : "Select a role"}
                         </option>
@@ -706,7 +683,7 @@ function SignUp() {
                     type="submit"
                     disabled={
                         isSubmitting ||
-                        rolesLoading
+                        roles.length === 0
                     }
                     style={{
                         padding: "10px 20px",
@@ -717,12 +694,12 @@ function SignUp() {
                         gap: "8px",
                         cursor:
                             isSubmitting ||
-                                rolesLoading
+                                roles.length === 0
                                 ? "not-allowed"
                                 : "pointer",
                         opacity:
                             isSubmitting ||
-                                rolesLoading
+                                roles.length === 0
                                 ? 0.7
                                 : 1,
                     }}
