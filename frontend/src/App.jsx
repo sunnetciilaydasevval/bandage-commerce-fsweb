@@ -1,4 +1,5 @@
 import "./i18n/i18n";
+
 import { useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -8,15 +9,21 @@ import {
 import { useDispatch } from "react-redux";
 
 import PageContent from "./layout/PageContent";
+
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
+import Favorites from "./pages/Favorites";
+import ShoppingCart from "./pages/ShoppingCart";
+
 import Contact from "./pages/Contact";
 import Team from "./pages/Team";
 import AboutUs from "./pages/AboutUs";
 import SignUp from "./pages/SignUp";
 
-import { fetchCategories } from "./redux/thunks/categoryThunk";
+import {
+  fetchCategories,
+} from "./redux/thunks/categoryThunk";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -27,31 +34,69 @@ export default function App() {
 
   return (
     <Router>
+
       <PageContent>
+
         <Routes>
-          <Route path="/" element={<Home />} />
+
+          <Route
+            path="/"
+            element={<Home />}
+          />
+
+          <Route
+            path="/shop"
+            element={<Shop />}
+          />
 
           <Route
             path="/shop/:gender/:categoryName/:categoryId"
             element={<Shop />}
           />
 
-          <Route path="/shop" element={<Shop />} />
-
           <Route
             path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
             element={<Product />}
           />
 
-          <Route path="/contact" element={<Contact />} />
+          <Route
+            path="/cart"
+            element={
+              <ShoppingCart />
+            }
+          />
 
-          <Route path="/team" element={<Team />} />
+          <Route
+            path="/favorites"
+            element={
+              <Favorites />
+            }
+          />
 
-          <Route path="/about" element={<AboutUs />} />
+          <Route
+            path="/contact"
+            element={<Contact />}
+          />
 
-          <Route path="/signup" element={<SignUp />} />
+          <Route
+            path="/team"
+            element={<Team />}
+          />
+
+          <Route
+            path="/about"
+            element={<AboutUs />}
+          />
+
+          <Route
+            path="/signup"
+            element={<SignUp />}
+          />
+
         </Routes>
+
       </PageContent>
+
     </Router>
   );
 }

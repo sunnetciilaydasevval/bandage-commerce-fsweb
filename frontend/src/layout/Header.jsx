@@ -59,16 +59,40 @@ export default function Header() {
         useState(false);
 
     const categories = useSelector(
-        (state) => state.product.categories || []
+        (state) =>
+            state.product?.categories || []
     );
 
-    const womenCategories = categories.filter(
-        (category) => category.gender === "k"
+    const cart = useSelector(
+        (state) =>
+            state.shoppingCart?.cart || []
     );
 
-    const menCategories = categories.filter(
-        (category) => category.gender === "e"
+    const favorites = useSelector(
+        (state) =>
+            state.favorite?.favorites || []
     );
+
+    const cartCount = cart.reduce(
+        (total, item) =>
+            total + Number(item.count || 0),
+        0
+    );
+
+    const favoriteCount =
+        favorites.length;
+
+    const womenCategories =
+        categories.filter(
+            (category) =>
+                category.gender === "k"
+        );
+
+    const menCategories =
+        categories.filter(
+            (category) =>
+                category.gender === "e"
+        );
 
     const closeMobileMenu = () => {
         setIsMobileMenuOpen(false);
@@ -82,6 +106,7 @@ export default function Header() {
             <div className="flex min-h-16 flex-col items-center justify-center gap-2 bg-[#252b42] px-4 py-3 text-center text-[11px] font-bold leading-4 tracking-[0.2px] text-white sm:flex-row sm:justify-between sm:px-6 lg:px-10 lg:py-2 lg:text-[14px] lg:leading-6">
 
                 <div className="hidden items-center gap-4 lg:flex">
+
                     <span className="flex items-center gap-1">
                         <Phone size={16} />
                         (225) 555-0118
@@ -91,6 +116,7 @@ export default function Header() {
                         <Mail size={16} />
                         michelle.rivera@example.com
                     </span>
+
                 </div>
 
                 <p>
@@ -98,7 +124,10 @@ export default function Header() {
                 </p>
 
                 <div className="hidden items-center gap-2 lg:flex">
-                    <span>Follow Us :</span>
+
+                    <span>
+                        Follow Us :
+                    </span>
 
                     <a
                         href="#"
@@ -131,7 +160,9 @@ export default function Header() {
                     >
                         <FaTwitter size={16} />
                     </a>
+
                 </div>
+
             </div>
 
             {/* MAIN NAVIGATION */}
@@ -146,37 +177,45 @@ export default function Header() {
                     BrandName
                 </Link>
 
-                {/* DESKTOP NAVIGATION */}
+                {/* DESKTOP NAV */}
                 <div className="hidden items-center gap-5 lg:flex">
 
-                    {navItems.map(([label, href]) => (
-                        <Link
-                            key={label}
-                            to={href}
-                            className="text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] transition-colors hover:text-[#23a6f0]"
-                        >
-                            {label}
-                        </Link>
-                    ))}
+                    {navItems.map(
+                        ([label, href]) => (
+                            <Link
+                                key={label}
+                                to={href}
+                                className="text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] transition-colors hover:text-[#23a6f0]"
+                            >
+                                {label}
+                            </Link>
+                        )
+                    )}
 
-                    {/* CATEGORIES */}
+                    {/* CATEGORY DROPDOWN */}
                     <div
                         className="relative"
                         onMouseEnter={() =>
-                            setIsCategoryOpen(true)
+                            setIsCategoryOpen(
+                                true
+                            )
                         }
                         onMouseLeave={() =>
-                            setIsCategoryOpen(false)
+                            setIsCategoryOpen(
+                                false
+                            )
                         }
                     >
+
                         <button
                             type="button"
                             onClick={() =>
                                 setIsCategoryOpen(
-                                    (current) => !current
+                                    (current) =>
+                                        !current
                                 )
                             }
-                            className="flex items-center gap-1 text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] hover:text-[#23a6f0]"
+                            className="flex items-center gap-1 text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] transition-colors hover:text-[#23a6f0]"
                         >
                             Categories
 
@@ -191,17 +230,22 @@ export default function Header() {
 
                         {isCategoryOpen && (
                             <div className="absolute left-1/2 top-full z-50 w-[430px] -translate-x-1/2 pt-3">
+
                                 <div className="grid grid-cols-2 gap-8 rounded-md border border-[#eeeeee] bg-white p-6 shadow-lg">
 
                                     {/* WOMEN */}
                                     <div>
+
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
                                             Kadın
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
+
                                             {womenCategories.map(
-                                                (category) => (
+                                                (
+                                                    category
+                                                ) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -214,7 +258,7 @@ export default function Header() {
                                                                 false
                                                             )
                                                         }
-                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                        className="text-sm text-[#737373] transition-colors hover:text-[#23a6f0]"
                                                     >
                                                         {
                                                             category.title
@@ -222,18 +266,24 @@ export default function Header() {
                                                     </Link>
                                                 )
                                             )}
+
                                         </div>
+
                                     </div>
 
                                     {/* MEN */}
                                     <div>
+
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
                                             Erkek
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
+
                                             {menCategories.map(
-                                                (category) => (
+                                                (
+                                                    category
+                                                ) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -246,7 +296,7 @@ export default function Header() {
                                                                 false
                                                             )
                                                         }
-                                                        className="text-sm text-[#737373] hover:text-[#23a6f0]"
+                                                        className="text-sm text-[#737373] transition-colors hover:text-[#23a6f0]"
                                                     >
                                                         {
                                                             category.title
@@ -254,12 +304,18 @@ export default function Header() {
                                                     </Link>
                                                 )
                                             )}
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                             </div>
                         )}
+
                     </div>
+
                 </div>
 
                 {/* DESKTOP ACTIONS */}
@@ -281,23 +337,39 @@ export default function Header() {
                         <Search size={18} />
                     </button>
 
-                    <button
-                        type="button"
+                    {/* CART */}
+                    <Link
+                        to="/cart"
                         aria-label="Shopping cart"
                         className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
                         <ShoppingCart size={18} />
-                        <span className="text-xs">1</span>
-                    </button>
 
-                    <button
-                        type="button"
+                        <span className="text-xs">
+                            {cartCount}
+                        </span>
+                    </Link>
+
+                    {/* FAVORITES */}
+                    <Link
+                        to="/favorites"
                         aria-label="Favorites"
                         className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
                     >
-                        <Heart size={18} />
-                        <span className="text-xs">1</span>
-                    </button>
+                        <Heart
+                            size={18}
+                            fill={
+                                favoriteCount > 0
+                                    ? "currentColor"
+                                    : "none"
+                            }
+                        />
+
+                        <span className="text-xs">
+                            {favoriteCount}
+                        </span>
+                    </Link>
+
                 </div>
 
                 {/* MOBILE ACTIONS */}
@@ -311,14 +383,37 @@ export default function Header() {
                         <Search size={22} />
                     </button>
 
-                    <button
-                        type="button"
+                    {/* MOBILE CART */}
+                    <Link
+                        to="/cart"
                         aria-label="Shopping cart"
-                        className="p-0 text-[#252b42]"
+                        className="relative p-0 text-[#252b42]"
                     >
                         <ShoppingCart size={22} />
-                    </button>
 
+                        {cartCount > 0 && (
+                            <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#23a6f0] px-1 text-[9px] font-bold text-white">
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    {/* MOBILE FAVORITES */}
+                    <Link
+                        to="/favorites"
+                        aria-label="Favorites"
+                        className="relative p-0 text-[#252b42]"
+                    >
+                        <Heart size={22} />
+
+                        {favoriteCount > 0 && (
+                            <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                                {favoriteCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    {/* MOBILE MENU */}
                     <button
                         type="button"
                         aria-label={
@@ -326,10 +421,13 @@ export default function Header() {
                                 ? "Close menu"
                                 : "Open menu"
                         }
-                        aria-expanded={isMobileMenuOpen}
+                        aria-expanded={
+                            isMobileMenuOpen
+                        }
                         onClick={() =>
                             setIsMobileMenuOpen(
-                                (current) => !current
+                                (current) =>
+                                    !current
                             )
                         }
                         className="p-0 text-[#252b42]"
@@ -340,7 +438,9 @@ export default function Header() {
                             <Menu size={24} />
                         )}
                     </button>
+
                 </div>
+
             </nav>
 
             {/* MOBILE NAVIGATION */}
@@ -349,24 +449,30 @@ export default function Header() {
 
                     <div className="flex flex-col items-center gap-6 text-center">
 
-                        {navItems.map(([label, href]) => (
-                            <Link
-                                key={label}
-                                to={href}
-                                onClick={closeMobileMenu}
-                                className="text-[24px] leading-8 text-[#737373] hover:text-[#23a6f0]"
-                            >
-                                {label}
-                            </Link>
-                        ))}
+                        {navItems.map(
+                            ([label, href]) => (
+                                <Link
+                                    key={label}
+                                    to={href}
+                                    onClick={
+                                        closeMobileMenu
+                                    }
+                                    className="text-[24px] leading-8 text-[#737373] transition-colors hover:text-[#23a6f0]"
+                                >
+                                    {label}
+                                </Link>
+                            )
+                        )}
 
+                        {/* MOBILE CATEGORIES */}
                         <div className="w-full max-w-[350px]">
 
                             <button
                                 type="button"
                                 onClick={() =>
                                     setMobileCategoryOpen(
-                                        (current) => !current
+                                        (current) =>
+                                            !current
                                     )
                                 }
                                 className="mx-auto flex items-center gap-2 text-[24px] leading-8 text-[#737373]"
@@ -387,13 +493,17 @@ export default function Header() {
 
                                     {/* WOMEN */}
                                     <div>
+
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
                                             Kadın
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
+
                                             {womenCategories.map(
-                                                (category) => (
+                                                (
+                                                    category
+                                                ) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -412,18 +522,24 @@ export default function Header() {
                                                     </Link>
                                                 )
                                             )}
+
                                         </div>
+
                                     </div>
 
                                     {/* MEN */}
                                     <div>
+
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
                                             Erkek
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
+
                                             {menCategories.map(
-                                                (category) => (
+                                                (
+                                                    category
+                                                ) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -442,15 +558,21 @@ export default function Header() {
                                                     </Link>
                                                 )
                                             )}
+
                                         </div>
+
                                     </div>
 
                                 </div>
                             )}
+
                         </div>
+
                     </div>
+
                 </div>
             )}
+
         </header>
     );
 }

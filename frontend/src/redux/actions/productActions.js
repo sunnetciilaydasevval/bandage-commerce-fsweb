@@ -1,8 +1,3 @@
-export const setProduct = (product) => ({
-    type: "PRODUCT_SET_PRODUCT",
-    payload: product,
-});
-
 export const setCategories = (categories) => ({
     type: "PRODUCT_SET_CATEGORIES",
     payload: categories,
@@ -16,6 +11,11 @@ export const setProductList = (productList) => ({
 export const setTotal = (total) => ({
     type: "PRODUCT_SET_TOTAL",
     payload: total,
+});
+
+export const setProduct = (product) => ({
+    type: "PRODUCT_SET_PRODUCT",
+    payload: product,
 });
 
 export const setFetchState = (fetchState) => ({

@@ -5,7 +5,20 @@ import { useParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { fetchProducts } from "../redux/thunks/productThunk";
 
-const LIMIT = 25;
+function createSlug(value = "") {
+    return value
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ı/g, "i")
+        .replace(/ğ/g, "g")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ö/g, "o")
+        .replace(/ç/g, "c")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
 
 export default function Shop() {
     const dispatch = useDispatch();
@@ -20,36 +33,39 @@ export default function Shop() {
         productList,
         total,
         fetchState,
-        categories,
-    } = useSelector((state) => state.product);
+    } = useSelector(
+        (state) => state.product
+    );
 
     const [filter, setFilter] = useState("");
     const [sort, setSort] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] =
+        useState(1);
+
+    const limit = 25;
 
     const category = categoryId
         ? Number(categoryId)
         : undefined;
 
-    const selectedCategory = categories.find(
-        (item) => item.id === category
+    const offset =
+        (currentPage - 1) * limit;
+
+    const totalPages = Math.ceil(
+        total / limit
     );
 
-    const offset = (currentPage - 1) * LIMIT;
-
-    const totalPages = Math.ceil(total / LIMIT);
-
     /*
-     * URL'deki kategori değişirse
-     * tekrar ilk sayfaya dön.
+     * Category değiştiğinde
+     * 1. sayfaya dön.
      */
     useEffect(() => {
         setCurrentPage(1);
     }, [category]);
 
     /*
-     * Category / filter / sort / pagination
-     * değiştiğinde API isteği gönder.
+     * Category / filter / sort / page
+     * değiştiğinde ürünleri tekrar çek.
      */
     useEffect(() => {
         dispatch(
@@ -57,7 +73,7 @@ export default function Shop() {
                 category,
                 filter,
                 sort,
-                limit: LIMIT,
+                limit,
                 offset,
             })
         );
@@ -66,6 +82,7 @@ export default function Shop() {
         category,
         filter,
         sort,
+        limit,
         offset,
     ]);
 
@@ -102,7 +119,9 @@ export default function Shop() {
 
         let endPage = Math.min(
             totalPages,
-            startPage + maxVisiblePages - 1
+            startPage +
+            maxVisiblePages -
+            1
         );
 
         if (
@@ -111,7 +130,9 @@ export default function Shop() {
         ) {
             startPage = Math.max(
                 1,
-                endPage - maxVisiblePages + 1
+                endPage -
+                maxVisiblePages +
+                1
             );
         }
 
@@ -131,22 +152,15 @@ export default function Shop() {
 
             <div className="mx-auto max-w-[1050px]">
 
-                {/* PAGE HEADER */}
+                {/* HEADER */}
                 <div className="mb-10 text-center">
 
                     <h1 className="mb-3 text-[24px] font-bold">
-                        {selectedCategory
-                            ? selectedCategory.title
-                            : "SHOP"}
+                        SHOP
                     </h1>
 
                     <p className="text-sm text-[#737373]">
-                        {selectedCategory
-                            ? `${selectedCategory.gender === "k"
-                                ? "Kadın"
-                                : "Erkek"
-                            } / ${selectedCategory.title}`
-                            : "Explore our products"}
+                        Explore our products
                     </p>
 
                 </div>
@@ -163,19 +177,21 @@ export default function Shop() {
 
                     <div className="flex flex-col gap-3 sm:flex-row">
 
-                        {/* FILTER */}
                         <input
                             type="text"
                             value={filter}
-                            onChange={handleFilterChange}
+                            onChange={
+                                handleFilterChange
+                            }
                             placeholder="Search products..."
                             className="border border-[#ececec] px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
                         />
 
-                        {/* SORT */}
                         <select
                             value={sort}
-                            onChange={handleSortChange}
+                            onChange={
+                                handleSortChange
+                            }
                             className="border border-[#ececec] bg-white px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
                         >
                             <option value="">
@@ -200,49 +216,67 @@ export default function Shop() {
                         </select>
 
                     </div>
+
                 </div>
 
                 {/* LOADING */}
-                {fetchState === "FETCHING" && (
-                    <div className="flex min-h-[300px] items-center justify-center">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
-                    </div>
-                )}
+                {fetchState ===
+                    "FETCHING" && (
+                        <div className="flex min-h-[300px] items-center justify-center">
+                            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
+                        </div>
+                    )}
 
                 {/* ERROR */}
-                {fetchState === "FAILED" && (
-                    <div className="py-20 text-center text-red-500">
-                        Products could not be loaded.
-                    </div>
-                )}
+                {fetchState ===
+                    "FAILED" && (
+                        <div className="py-20 text-center text-red-500">
+                            Products could not be loaded.
+                        </div>
+                    )}
 
                 {/* PRODUCTS */}
-                {fetchState !== "FETCHING" &&
-                    fetchState !== "FAILED" && (
+                {fetchState !==
+                    "FETCHING" &&
+                    fetchState !==
+                    "FAILED" && (
                         <>
-                            {productList.length === 0 ? (
+                            {productList.length ===
+                                0 ? (
                                 <div className="py-20 text-center text-[#737373]">
                                     No products found.
                                 </div>
                             ) : (
                                 <div className="flex flex-wrap justify-center gap-4">
-                                    {productList.map(
-                                        (product) => (
-                                            <ProductCard
-                                                key={product.id}
-                                                product={product}
-                                                category={{
-                                                    id: categoryId,
-                                                    title: categoryName,
-                                                    gender:
-                                                        gender === "erkek"
-                                                            ? "e"
-                                                            : "k",
-                                                }}
-                                            />
 
-                                        )
+                                    {productList.map(
+                                        (product) => {
+                                            const productSlug =
+                                                createSlug(
+                                                    product.name
+                                                );
+
+                                            const productUrl =
+                                                categoryId
+                                                    ? `/shop/${gender}/${categoryName}/${categoryId}/${productSlug}/${product.id}`
+                                                    : `/product/${productSlug}/${product.id}`;
+
+                                            return (
+                                                <ProductCard
+                                                    key={
+                                                        product.id
+                                                    }
+                                                    product={
+                                                        product
+                                                    }
+                                                    productUrl={
+                                                        productUrl
+                                                    }
+                                                />
+                                            );
+                                        }
                                     )}
+
                                 </div>
                             )}
                         </>
@@ -250,48 +284,59 @@ export default function Shop() {
 
                 {/* PAGINATION */}
                 {totalPages > 1 &&
-                    fetchState !== "FETCHING" && (
+                    fetchState !==
+                    "FETCHING" && (
                         <div className="flex justify-center pt-12">
 
-                            <div className="flex flex-wrap border border-[#ececec] text-xs">
+                            <div className="flex overflow-x-auto border border-[#ececec] text-xs">
 
-                                {/* FIRST */}
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        handlePageChange(1)
+                                        handlePageChange(
+                                            1
+                                        )
                                     }
-                                    disabled={currentPage === 1}
-                                    className={`px-4 py-3 ${currentPage === 1
-                                        ? "cursor-not-allowed text-[#bdbdbd]"
-                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                    disabled={
+                                        currentPage ===
+                                        1
+                                    }
+                                    className={`px-4 py-3 ${currentPage ===
+                                            1
+                                            ? "cursor-not-allowed text-[#bdbdbd]"
+                                            : "text-[#23a6f0] hover:bg-[#f5f5f5]"
                                         }`}
                                 >
                                     First
                                 </button>
 
-                                {/* PREVIOUS */}
                                 <button
                                     type="button"
                                     onClick={() =>
                                         handlePageChange(
-                                            currentPage - 1
+                                            currentPage -
+                                            1
                                         )
                                     }
-                                    disabled={currentPage === 1}
-                                    className={`px-4 py-3 ${currentPage === 1
-                                        ? "cursor-not-allowed text-[#bdbdbd]"
-                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                    disabled={
+                                        currentPage ===
+                                        1
+                                    }
+                                    className={`px-4 py-3 ${currentPage ===
+                                            1
+                                            ? "cursor-not-allowed text-[#bdbdbd]"
+                                            : "text-[#23a6f0] hover:bg-[#f5f5f5]"
                                         }`}
                                 >
                                     Previous
                                 </button>
 
-                                {/* PAGE NUMBERS */}
                                 {getPageNumbers().map(
                                     (page) => (
                                         <button
-                                            key={page}
+                                            key={
+                                                page
+                                            }
                                             type="button"
                                             onClick={() =>
                                                 handlePageChange(
@@ -299,9 +344,9 @@ export default function Shop() {
                                                 )
                                             }
                                             className={`px-4 py-3 ${page ===
-                                                currentPage
-                                                ? "bg-[#23a6f0] font-bold text-white"
-                                                : "text-[#252b42] hover:bg-[#f5f5f5]"
+                                                    currentPage
+                                                    ? "bg-[#23a6f0] font-bold text-white"
+                                                    : "text-[#252b42] hover:bg-[#f5f5f5]"
                                                 }`}
                                         >
                                             {page}
@@ -309,12 +354,12 @@ export default function Shop() {
                                     )
                                 )}
 
-                                {/* NEXT */}
                                 <button
                                     type="button"
                                     onClick={() =>
                                         handlePageChange(
-                                            currentPage + 1
+                                            currentPage +
+                                            1
                                         )
                                     }
                                     disabled={
@@ -322,15 +367,14 @@ export default function Shop() {
                                         totalPages
                                     }
                                     className={`px-4 py-3 ${currentPage ===
-                                        totalPages
-                                        ? "cursor-not-allowed text-[#bdbdbd]"
-                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                            totalPages
+                                            ? "cursor-not-allowed text-[#bdbdbd]"
+                                            : "text-[#23a6f0] hover:bg-[#f5f5f5]"
                                         }`}
                                 >
                                     Next
                                 </button>
 
-                                {/* LAST */}
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -343,19 +387,21 @@ export default function Shop() {
                                         totalPages
                                     }
                                     className={`px-4 py-3 ${currentPage ===
-                                        totalPages
-                                        ? "cursor-not-allowed text-[#bdbdbd]"
-                                        : "text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                            totalPages
+                                            ? "cursor-not-allowed text-[#bdbdbd]"
+                                            : "text-[#23a6f0] hover:bg-[#f5f5f5]"
                                         }`}
                                 >
                                     Last
                                 </button>
 
                             </div>
+
                         </div>
                     )}
 
             </div>
+
         </div>
     );
 }

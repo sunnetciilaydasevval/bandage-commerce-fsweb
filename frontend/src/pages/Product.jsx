@@ -3,10 +3,23 @@ import {
     Link,
     useParams,
 } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import {
+    ArrowLeft,
+    Heart,
+    ShoppingCart,
+} from "lucide-react";
+import {
+    useDispatch,
+    useSelector,
+} from "react-redux";
 
 import { fetchProduct } from "../redux/thunks/productThunk";
+
+import { addToCart } from "../redux/actions/shoppingCartActions";
+
+import {
+    toggleFavorite,
+} from "../redux/actions/favoriteActions";
 
 export default function Product() {
     const dispatch = useDispatch();
@@ -16,6 +29,11 @@ export default function Product() {
         fetchState,
     } = useSelector(
         (state) => state.product
+    );
+
+    const favorites = useSelector(
+        (state) =>
+            state.favorite?.favorites || []
     );
 
     const {
@@ -33,7 +51,33 @@ export default function Product() {
         }
     }, [dispatch, productId]);
 
-    const backUrl = `/shop/${gender}/${categoryName}/${categoryId}`;
+    const isFavorite =
+        product &&
+        favorites.some(
+            (favorite) =>
+                favorite.id === product.id
+        );
+
+    const backUrl =
+        gender &&
+            categoryName &&
+            categoryId
+            ? `/shop/${gender}/${categoryName}/${categoryId}`
+            : "/shop";
+
+    const handleAddToCart = () => {
+        if (product) {
+            dispatch(addToCart(product));
+        }
+    };
+
+    const handleFavorite = () => {
+        if (product) {
+            dispatch(
+                toggleFavorite(product)
+            );
+        }
+    };
 
     if (fetchState === "FETCHING") {
         return (
@@ -73,36 +117,33 @@ export default function Product() {
 
             <div className="mx-auto max-w-[1050px]">
 
-                {/* BACK BUTTON */}
+                {/* BACK */}
                 <Link
                     to={backUrl}
-                    className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#737373] transition-colors hover:text-[#23a6f0]"
+                    className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#737373] hover:text-[#23a6f0]"
                 >
                     <ArrowLeft size={18} />
                     Back to Shop
                 </Link>
 
-                {/* PRODUCT DETAIL */}
                 <div className="grid gap-10 md:grid-cols-2">
 
                     {/* IMAGE */}
                     <div className="overflow-hidden bg-[#f5f5f5]">
+
                         <img
                             src={image}
                             alt={product.name}
                             className="h-full max-h-[650px] w-full object-cover"
                         />
+
                     </div>
 
                     {/* INFO */}
                     <div className="flex flex-col justify-center">
 
                         <p className="mb-3 text-sm font-bold uppercase tracking-wide text-[#23a6f0]">
-                            {gender === "k"
-                                ? "Kadın"
-                                : gender === "e"
-                                    ? "Erkek"
-                                    : ""}
+                            Product
                         </p>
 
                         <h1 className="mb-5 text-3xl font-bold leading-tight">
@@ -167,15 +208,50 @@ export default function Product() {
 
                         </div>
 
-                        <button
-                            type="button"
-                            className="w-full bg-[#23a6f0] px-8 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0]"
-                        >
-                            ADD TO CART
-                        </button>
+                        {/* ACTIONS */}
+                        <div className="flex gap-3">
+
+                            <button
+                                type="button"
+                                onClick={
+                                    handleAddToCart
+                                }
+                                className="flex flex-1 items-center justify-center gap-2 bg-[#23a6f0] px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0]"
+                            >
+                                <ShoppingCart
+                                    size={18}
+                                />
+                                ADD TO CART
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={
+                                    handleFavorite
+                                }
+                                aria-label={
+                                    isFavorite
+                                        ? "Remove from favorites"
+                                        : "Add to favorites"
+                                }
+                                className={`flex h-[54px] w-[54px] items-center justify-center border transition-all hover:scale-105 ${isFavorite
+                                        ? "border-red-500 text-red-500"
+                                        : "border-[#eeeeee] text-[#737373]"
+                                    }`}
+                            >
+                                <Heart
+                                    size={21}
+                                    fill={
+                                        isFavorite
+                                            ? "currentColor"
+                                            : "none"
+                                    }
+                                />
+                            </button>
+
+                        </div>
 
                     </div>
-
                 </div>
             </div>
         </div>

@@ -2,8 +2,10 @@ const initialState = {
     categories: [],
 
     productList: [],
-    product: null,
     total: 0,
+
+    // Product Detail
+    product: null,
 
     limit: 25,
     offset: 0,
@@ -29,16 +31,16 @@ const productReducer = (state = initialState, action) => {
                 productList: action.payload,
             };
 
-        case "PRODUCT_SET_PRODUCT":
-            return {
-                ...state,
-                product: action.payload,
-            };
-
         case "PRODUCT_SET_TOTAL":
             return {
                 ...state,
                 total: action.payload,
+            };
+
+        case "PRODUCT_SET_PRODUCT":
+            return {
+                ...state,
+                product: action.payload,
             };
 
         case "PRODUCT_SET_FETCH_STATE":

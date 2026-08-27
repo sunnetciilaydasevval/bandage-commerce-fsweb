@@ -1,14 +1,24 @@
-import { applyMiddleware, legacy_createStore as createStore } from "redux";
+import {
+    legacy_createStore as createStore,
+    combineReducers,
+    applyMiddleware,
+} from "redux";
+
 import { thunk } from "redux-thunk";
-import { createLogger } from "redux-logger";
 
-import rootReducer from "./reducers";
+import productReducer from "./reducers/productReducer";
+import shoppingCartReducer from "./reducers/shoppingCartReducer";
+import favoriteReducer from "./reducers/favoriteReducer";
 
-const logger = createLogger();
+const rootReducer = combineReducers({
+    product: productReducer,
+    shoppingCart: shoppingCartReducer,
+    favorite: favoriteReducer,
+});
 
 const store = createStore(
     rootReducer,
-    applyMiddleware(thunk, logger)
+    applyMiddleware(thunk)
 );
 
 export default store;

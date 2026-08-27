@@ -1,9 +1,9 @@
 import api from "../../api/axiosInstance";
 
 import {
-    setProduct,
     setProductList,
     setTotal,
+    setProduct,
     setFetchState,
 } from "../actions/productActions";
 
@@ -26,10 +26,16 @@ export const fetchProducts = (params = {}) => {
             });
 
             dispatch(
-                setProductList(response.data.products)
+                setProductList(
+                    response.data.products || []
+                )
             );
 
-            dispatch(setTotal(response.data.total));
+            dispatch(
+                setTotal(
+                    response.data.total || 0
+                )
+            );
 
             dispatch(setFetchState("FETCHED"));
         } catch (error) {
@@ -63,6 +69,7 @@ export const fetchProduct = (productId) => {
                 error
             );
 
+            dispatch(setProduct(null));
             dispatch(setFetchState("FAILED"));
         }
     };
