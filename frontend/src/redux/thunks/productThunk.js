@@ -1,6 +1,7 @@
 import api from "../../api/axiosInstance";
 
 import {
+    setProduct,
     setProductList,
     setTotal,
     setFetchState,
@@ -34,6 +35,31 @@ export const fetchProducts = (params = {}) => {
         } catch (error) {
             console.error(
                 "Failed to fetch products:",
+                error
+            );
+
+            dispatch(setFetchState("FAILED"));
+        }
+    };
+};
+
+export const fetchProduct = (productId) => {
+    return async (dispatch) => {
+        dispatch(setFetchState("FETCHING"));
+
+        try {
+            const response = await api.get(
+                `/products/${productId}`
+            );
+
+            dispatch(
+                setProduct(response.data)
+            );
+
+            dispatch(setFetchState("FETCHED"));
+        } catch (error) {
+            console.error(
+                "Failed to fetch product:",
                 error
             );
 

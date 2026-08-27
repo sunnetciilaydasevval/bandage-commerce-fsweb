@@ -10,7 +10,11 @@ const LIMIT = 25;
 export default function Shop() {
     const dispatch = useDispatch();
 
-    const { categoryId } = useParams();
+    const {
+        gender,
+        categoryName,
+        categoryId,
+    } = useParams();
 
     const {
         productList,
@@ -226,12 +230,17 @@ export default function Shop() {
                                         (product) => (
                                             <ProductCard
                                                 key={product.id}
-                                                product={{
-                                                    ...product,
-                                                    image:
-                                                        product.images?.[0]?.url,
+                                                product={product}
+                                                category={{
+                                                    id: categoryId,
+                                                    title: categoryName,
+                                                    gender:
+                                                        gender === "erkek"
+                                                            ? "e"
+                                                            : "k",
                                                 }}
                                             />
+
                                         )
                                     )}
                                 </div>

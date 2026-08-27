@@ -1,3 +1,8 @@
+export const setProduct = (product) => ({
+    type: "PRODUCT_SET_PRODUCT",
+    payload: product,
+});
+
 export const setCategories = (categories) => ({
     type: "PRODUCT_SET_CATEGORIES",
     payload: categories,

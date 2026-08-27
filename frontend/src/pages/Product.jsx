@@ -1,9 +1,183 @@
-import { Heart, ShoppingCart, Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCard from "../components/ProductCard";
-import { products } from "../data/products";
+import { useEffect } from "react";
+import {
+    Link,
+    useParams,
+} from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+
+import { fetchProduct } from "../redux/thunks/productThunk";
 
 export default function Product() {
-    const product = products[0];
-    const productColors = ["bg-[#23a6f0]", "bg-[#2dc071]", "bg-[#e77c40]", "bg-[#252b42]"];
-    return <div className="bg-white font-['Montserrat',sans-serif] text-[#252b42]"><section className="mx-auto flex max-w-[1050px] flex-col gap-8 bg-[#fafafa] px-6 py-8 md:flex-row"><div className="w-full md:w-1/2"><div className="relative"><img src={product.image} alt={product.name} className="aspect-square w-full object-cover" /><button type="button" aria-label="Previous image" className="absolute left-4 top-1/2 text-white"><ChevronLeft /></button><button type="button" aria-label="Next image" className="absolute right-4 top-1/2 text-white"><ChevronRight /></button></div><div className="mt-4 flex gap-3"><img src={product.image} alt="Thumbnail" className="h-16 w-16 object-cover" /><img src={products[1].image} alt="Thumbnail" className="h-16 w-16 object-cover" /></div></div><div className="flex flex-col items-start gap-5 md:w-1/2 md:pt-4"><p className="text-sm text-[#737373]">Floating Phone</p><h1 className="text-[24px] font-bold">{product.price}</h1><p className="text-xs">Availability : <span className="text-[#23a6f0]">In Stock</span></p><p className="text-sm leading-5 text-[#737373]">Met minim Mollie non desert Alamo est sit cliquey dolor do met sent. RELIT official consequent door ENIM RELIT Mollie.</p><div className="flex gap-2">{productColors.map(colorClass => <span key={colorClass} className={`h-5 w-5 rounded-full ${colorClass}`} />)}</div><div className="flex items-center gap-3"><button type="button" className="bg-[#23a6f0] px-6 py-3 text-xs font-bold text-white">Select Options</button><button type="button" aria-label="Add to favorites" className="rounded-full border p-3"><Heart size={16} /></button><button type="button" aria-label="Add to cart" className="rounded-full border p-3"><ShoppingCart size={16} /></button><button type="button" aria-label="View product" className="rounded-full border p-3"><Eye size={16} /></button></div></div></section><section className="mx-auto flex max-w-[1050px] flex-col gap-8 px-6 py-16 md:flex-row"><img src={products[2].image} alt="Product details" className="w-full object-cover md:w-1/3" /><div className="flex-1"><h2 className="mb-4 text-[20px] font-bold">the quick fox jumps over</h2><p className="text-sm leading-5 text-[#737373]">Met minim Mollie non desert Alamo est sit cliquey dolor do met sent. RELIT official consequent door ENIM RELIT Mollie. Excitation venial consequent sent nostrum met.</p><p className="mt-4 text-sm leading-5 text-[#737373]">Met minim Mollie non desert Alamo est sit cliquey dolor do met sent. RELIT official consequent door ENIM RELIT Mollie.</p></div><div className="flex-1"><h2 className="mb-4 text-[20px] font-bold">the quick fox jumps over</h2><ul className="list-inside list-disc text-sm leading-8 text-[#737373]"><li>the quick fox jumps over the lazy dog</li><li>the quick fox jumps over the lazy dog</li><li>the quick fox jumps over the lazy dog</li></ul></div></section><section className="bg-[#fafafa] px-6 py-12"><h2 className="mx-auto mb-8 max-w-[1050px] text-[20px] font-bold">BESTSELLER PRODUCTS</h2><div className="mx-auto flex max-w-[1050px] flex-wrap justify-center gap-4">{products.map(item => <ProductCard key={item.id} product={item} />)}</div></section></div>;
+    const dispatch = useDispatch();
+
+    const {
+        product,
+        fetchState,
+    } = useSelector(
+        (state) => state.product
+    );
+
+    const {
+        productId,
+        categoryName,
+        gender,
+        categoryId,
+    } = useParams();
+
+    useEffect(() => {
+        if (productId) {
+            dispatch(
+                fetchProduct(productId)
+            );
+        }
+    }, [dispatch, productId]);
+
+    const backUrl = `/shop/${gender}/${categoryName}/${categoryId}`;
+
+    if (fetchState === "FETCHING") {
+        return (
+            <div className="flex min-h-[600px] items-center justify-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
+            </div>
+        );
+    }
+
+    if (fetchState === "FAILED") {
+        return (
+            <div className="flex min-h-[600px] flex-col items-center justify-center gap-6">
+                <p className="text-red-500">
+                    Product could not be loaded.
+                </p>
+
+                <Link
+                    to={backUrl}
+                    className="bg-[#23a6f0] px-6 py-3 text-sm font-bold text-white"
+                >
+                    Back to Shop
+                </Link>
+            </div>
+        );
+    }
+
+    if (!product) {
+        return null;
+    }
+
+    const image =
+        product?.images?.[0]?.url ||
+        "https://via.placeholder.com/600x700?text=No+Image";
+
+    return (
+        <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
+
+            <div className="mx-auto max-w-[1050px]">
+
+                {/* BACK BUTTON */}
+                <Link
+                    to={backUrl}
+                    className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#737373] transition-colors hover:text-[#23a6f0]"
+                >
+                    <ArrowLeft size={18} />
+                    Back to Shop
+                </Link>
+
+                {/* PRODUCT DETAIL */}
+                <div className="grid gap-10 md:grid-cols-2">
+
+                    {/* IMAGE */}
+                    <div className="overflow-hidden bg-[#f5f5f5]">
+                        <img
+                            src={image}
+                            alt={product.name}
+                            className="h-full max-h-[650px] w-full object-cover"
+                        />
+                    </div>
+
+                    {/* INFO */}
+                    <div className="flex flex-col justify-center">
+
+                        <p className="mb-3 text-sm font-bold uppercase tracking-wide text-[#23a6f0]">
+                            {gender === "k"
+                                ? "Kadın"
+                                : gender === "e"
+                                    ? "Erkek"
+                                    : ""}
+                        </p>
+
+                        <h1 className="mb-5 text-3xl font-bold leading-tight">
+                            {product.name}
+                        </h1>
+
+                        <p className="mb-6 text-xl font-bold text-[#23856d]">
+                            {Number(
+                                product.price
+                            ).toFixed(2)}{" "}
+                            ₺
+                        </p>
+
+                        <p className="mb-8 text-sm leading-6 text-[#737373]">
+                            {product.description}
+                        </p>
+
+                        <div className="mb-8 grid grid-cols-2 gap-4 border-y border-[#eeeeee] py-6">
+
+                            <div>
+                                <p className="mb-1 text-xs text-[#737373]">
+                                    Rating
+                                </p>
+
+                                <p className="font-bold">
+                                    ⭐{" "}
+                                    {Number(
+                                        product.rating
+                                    ).toFixed(1)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="mb-1 text-xs text-[#737373]">
+                                    Stock
+                                </p>
+
+                                <p className="font-bold">
+                                    {product.stock}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="mb-1 text-xs text-[#737373]">
+                                    Sold
+                                </p>
+
+                                <p className="font-bold">
+                                    {product.sell_count}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="mb-1 text-xs text-[#737373]">
+                                    Category ID
+                                </p>
+
+                                <p className="font-bold">
+                                    {product.category_id}
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            className="w-full bg-[#23a6f0] px-8 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0]"
+                        >
+                            ADD TO CART
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
 }

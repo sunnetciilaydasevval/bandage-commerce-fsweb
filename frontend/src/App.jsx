@@ -1,6 +1,10 @@
 import "./i18n/i18n";
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 import PageContent from "./layout/PageContent";
@@ -34,14 +38,19 @@ export default function App() {
 
           <Route path="/shop" element={<Shop />} />
 
-          <Route path="/product" element={<Product />} />
+          <Route
+            path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
+            element={<Product />}
+          />
+
           <Route path="/contact" element={<Contact />} />
+
           <Route path="/team" element={<Team />} />
+
           <Route path="/about" element={<AboutUs />} />
+
           <Route path="/signup" element={<SignUp />} />
         </Routes>
-
-
       </PageContent>
     </Router>
   );

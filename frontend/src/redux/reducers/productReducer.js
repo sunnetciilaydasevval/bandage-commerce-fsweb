@@ -2,6 +2,7 @@ const initialState = {
     categories: [],
 
     productList: [],
+    product: null,
     total: 0,
 
     limit: 25,
@@ -26,6 +27,12 @@ const productReducer = (state = initialState, action) => {
             return {
                 ...state,
                 productList: action.payload,
+            };
+
+        case "PRODUCT_SET_PRODUCT":
+            return {
+                ...state,
+                product: action.payload,
             };
 
         case "PRODUCT_SET_TOTAL":
