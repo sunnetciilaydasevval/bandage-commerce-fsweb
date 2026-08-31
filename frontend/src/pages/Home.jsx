@@ -16,13 +16,8 @@ const slides = [
     },
 ];
 
-function createCategoryUrl(category) {
-    const gender =
-        category.gender === "k"
-            ? "kadin"
-            : "erkek";
-
-    const categoryName = category.title
+function createSlug(value = "") {
+    return value
         .toLocaleLowerCase("tr-TR")
         .replace(/ı/g, "i")
         .replace(/ğ/g, "g")
@@ -30,9 +25,37 @@ function createCategoryUrl(category) {
         .replace(/ş/g, "s")
         .replace(/ö/g, "o")
         .replace(/ç/g, "c")
-        .replace(/\s+/g, "-");
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+function createCategoryUrl(category) {
+    const gender =
+        category.gender === "k"
+            ? "kadin"
+            : "erkek";
+
+    const categoryName = createSlug(category.title);
 
     return `/shop/${gender}/${categoryName}/${category.id}`;
+}
+
+function createProductUrl(product, category) {
+    if (!category) {
+        return `/product/${createSlug(product.name)}/${product.id}`;
+    }
+
+    const gender =
+        category.gender === "k"
+            ? "kadin"
+            : "erkek";
+
+    const categoryName = createSlug(category.title);
+    const productSlug = createSlug(product.name);
+
+    return `/shop/${gender}/${categoryName}/${category.id}/${productSlug}/${product.id}`;
 }
 
 export default function Home() {
@@ -209,12 +232,22 @@ export default function Home() {
                                     )
                             )
                             .slice(0, 8)
-                            .map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                />
-                            ))}
+                            .map((product) => {
+                                const category = categories.find(
+                                    (cat) => cat.id === product.category_id
+                                );
+
+                                return (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        productUrl={createProductUrl(
+                                            product,
+                                            category
+                                        )}
+                                    />
+                                );
+                            })}
                     </div>
                 ) : (
                     <div className="py-20 text-center text-sm text-[#737373]">

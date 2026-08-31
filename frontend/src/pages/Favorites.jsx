@@ -4,10 +4,45 @@ import { useSelector } from "react-redux";
 
 import ProductCard from "../components/ProductCard";
 
+function createSlug(value = "") {
+    return value
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ı/g, "i")
+        .replace(/ğ/g, "g")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ö/g, "o")
+        .replace(/ç/g, "c")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+function createProductUrl(product, category) {
+    if (!category) {
+        return `/product/${createSlug(product.name)}/${product.id}`;
+    }
+
+    const gender =
+        category.gender === "k"
+            ? "kadin"
+            : "erkek";
+
+    const categoryName = createSlug(category.title);
+    const productSlug = createSlug(product.name);
+
+    return `/shop/${gender}/${categoryName}/${category.id}/${productSlug}/${product.id}`;
+}
+
 export default function Favorites() {
     const favorites = useSelector(
         (state) =>
             state.favorite?.favorites || []
+    );
+
+    const categories = useSelector(
+        (state) => state.product.categories || []
     );
 
     return (
@@ -66,12 +101,22 @@ export default function Favorites() {
                     <div className="flex flex-wrap justify-center gap-4">
 
                         {favorites.map(
-                            (product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                />
-                            )
+                            (product) => {
+                                const category = categories.find(
+                                    (cat) => cat.id === product.category_id
+                                );
+
+                                return (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        productUrl={createProductUrl(
+                                            product,
+                                            category
+                                        )}
+                                    />
+                                );
+                            }
                         )}
 
                     </div>

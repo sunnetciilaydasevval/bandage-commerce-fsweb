@@ -550,6 +550,9 @@ function CreateOrder() {
                 address_id:
                     shippingAddress.id,
 
+                receipt_address_id:
+                    receiptAddress.id,
+
                 order_date:
                     new Date().toISOString(),
 
@@ -578,24 +581,6 @@ function CreateOrder() {
 
                 products,
             };
-
-            /*
-             * IMPORTANT:
-             *
-             * receiptAddress seçiliyor ancak mevcut
-             * order API sözleşmesinde hangi field ile
-             * gönderileceği bilinmiyor.
-             *
-             * Backend örneğin:
-             *
-             * receipt_address_id
-             *
-             * veya
-             *
-             * invoice_address_id
-             *
-             * bekliyorsa burada ilgili alan eklenmelidir.
-             */
 
             await dispatch(
                 createOrder(orderData)
