@@ -7,3 +7,7 @@ export const getRoles = () => {
 export const signup = (formData) => {
     return api.post("/signup", formData);
 };
+
+export const login = (formData) => {
+    return api.post("/login", formData);
+};

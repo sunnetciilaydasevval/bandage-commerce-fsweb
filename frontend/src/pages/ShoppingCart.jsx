@@ -19,24 +19,52 @@ export default function ShoppingCart() {
                 state.shoppingCart.cart
         ) || [];
 
+    const payment =
+        useSelector(
+            (state) =>
+                state.shoppingCart.payment
+        ) || {};
+
     const selectedItems =
         cart.filter(
             (item) => item.checked
         );
 
-    const total = selectedItems.reduce(
-        (sum, item) =>
-            sum +
-            Number(item.product.price) *
-            item.count,
-        0
-    );
+    const productsTotal =
+        selectedItems.reduce(
+            (sum, item) =>
+                sum +
+                Number(item.product.price) *
+                    item.count,
+            0
+        );
+
+    const shipping =
+        Number(
+            payment.shippingPrice ??
+                payment.shipping ??
+                payment.paymentPrice ??
+                0
+        );
+
+    const discount =
+        Number(
+            payment.discountAmount ??
+                payment.discount ??
+                0
+        );
+
+    const grandTotal =
+        productsTotal +
+        shipping -
+        discount;
+
+    const formatPrice = (price) =>
+        `${Number(price).toFixed(2)} ₺`;
 
     return (
         <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
-
-            <div className="mx-auto max-w-[1050px]">
-
+            <div className="mx-auto max-w-[1200px]">
                 <h1 className="mb-10 text-3xl font-bold">
                     Shopping Cart
                 </h1>
@@ -46,206 +74,256 @@ export default function ShoppingCart() {
                         Your shopping cart is empty.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_350px] lg:items-start">
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="border-b border-[#eeeeee] text-left text-sm">
+                                        <th className="p-4">
+                                            Select
+                                        </th>
 
-                        <table className="w-full border-collapse">
+                                        <th className="p-4">
+                                            Product
+                                        </th>
 
-                            <thead>
-                                <tr className="border-b border-[#eeeeee] text-left text-sm">
-                                    <th className="p-4">
-                                        Select
-                                    </th>
+                                        <th className="p-4">
+                                            Price
+                                        </th>
 
-                                    <th className="p-4">
-                                        Product
-                                    </th>
+                                        <th className="p-4">
+                                            Quantity
+                                        </th>
 
-                                    <th className="p-4">
-                                        Price
-                                    </th>
+                                        <th className="p-4">
+                                            Total
+                                        </th>
 
-                                    <th className="p-4">
-                                        Quantity
-                                    </th>
+                                        <th className="p-4">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
 
-                                    <th className="p-4">
-                                        Total
-                                    </th>
+                                <tbody>
+                                    {cart.map(
+                                        (item) => {
+                                            const product =
+                                                item.product;
 
-                                    <th className="p-4">
-                                        Action
-                                    </th>
-                                </tr>
-                            </thead>
+                                            const itemTotal =
+                                                Number(
+                                                    product.price
+                                                ) *
+                                                item.count;
 
-                            <tbody>
-                                {cart.map(
-                                    (item) => {
-                                        const product =
-                                            item.product;
-
-                                        const itemTotal =
-                                            Number(
-                                                product.price
-                                            ) *
-                                            item.count;
-
-                                        return (
-                                            <tr
-                                                key={
-                                                    product.id
-                                                }
-                                                className="border-b border-[#eeeeee]"
-                                            >
-
-                                                <td className="p-4">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            item.checked
-                                                        }
-                                                        onChange={() =>
-                                                            dispatch(
-                                                                toggleCartItem(
-                                                                    product.id
+                                            return (
+                                                <tr
+                                                    key={
+                                                        product.id
+                                                    }
+                                                    className="border-b border-[#eeeeee]"
+                                                >
+                                                    <td className="p-4">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={
+                                                                item.checked
+                                                            }
+                                                            onChange={() =>
+                                                                dispatch(
+                                                                    toggleCartItem(
+                                                                        product.id
+                                                                    )
                                                                 )
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-
-                                                <td className="p-4">
-
-                                                    <div className="flex items-center gap-4">
-
-                                                        <img
-                                                            src={
-                                                                product
-                                                                    ?.images?.[0]
-                                                                    ?.url
                                                             }
-                                                            alt={
-                                                                product.name
-                                                            }
-                                                            className="h-20 w-16 object-cover"
                                                         />
+                                                    </td>
 
-                                                        <span className="font-bold">
-                                                            {
-                                                                product.name
-                                                            }
-                                                        </span>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <img
+                                                                src={
+                                                                    product
+                                                                        ?.images?.[0]
+                                                                        ?.url
+                                                                }
+                                                                alt={
+                                                                    product.name
+                                                                }
+                                                                className="h-20 w-16 object-cover"
+                                                            />
 
-                                                    </div>
+                                                            <span className="font-bold">
+                                                                {
+                                                                    product.name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </td>
 
-                                                </td>
+                                                    <td className="p-4">
+                                                        {Number(
+                                                            product.price
+                                                        ).toFixed(
+                                                            2
+                                                        )}{" "}
+                                                        ₺
+                                                    </td>
 
-                                                <td className="p-4">
-                                                    {Number(
-                                                        product.price
-                                                    ).toFixed(
-                                                        2
-                                                    )}{" "}
-                                                    ₺
-                                                </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    dispatch(
+                                                                        decreaseCartItem(
+                                                                            product.id
+                                                                        )
+                                                                    )
+                                                                }
+                                                                className="h-8 w-8 border"
+                                                            >
+                                                                -
+                                                            </button>
 
-                                                <td className="p-4">
+                                                            <span>
+                                                                {
+                                                                    item.count
+                                                                }
+                                                            </span>
 
-                                                    <div className="flex items-center gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    dispatch(
+                                                                        increaseCartItem(
+                                                                            product.id
+                                                                        )
+                                                                    )
+                                                                }
+                                                                className="h-8 w-8 border"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </td>
 
+                                                    <td className="p-4 font-bold">
+                                                        {itemTotal.toFixed(
+                                                            2
+                                                        )}{" "}
+                                                        ₺
+                                                    </td>
+
+                                                    <td className="p-4">
                                                         <button
                                                             type="button"
                                                             onClick={() =>
                                                                 dispatch(
-                                                                    decreaseCartItem(
+                                                                    removeFromCart(
                                                                         product.id
                                                                     )
                                                                 )
                                                             }
-                                                            className="h-8 w-8 border"
+                                                            className="text-sm font-bold text-red-500 hover:text-red-700"
                                                         >
-                                                            -
+                                                            Remove
                                                         </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+                                    )}
+                                </tbody>
 
-                                                        <span>
-                                                            {
-                                                                item.count
-                                                            }
-                                                        </span>
+                                <tfoot>
+                                    <tr>
+                                        <td
+                                            colSpan="6"
+                                            className="p-6 text-right"
+                                        >
+                                            <span className="mr-4 text-sm font-bold text-[#737373]">
+                                                Selected Total:
+                                            </span>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                dispatch(
-                                                                    increaseCartItem(
-                                                                        product.id
-                                                                    )
-                                                                )
-                                                            }
-                                                            className="h-8 w-8 border"
-                                                        >
-                                                            +
-                                                        </button>
+                                            <span className="text-xl font-bold text-[#23856d]">
+                                                {formatPrice(
+                                                    productsTotal
+                                                )}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
-                                                    </div>
+                        <aside className="w-full rounded-md border border-[#e6e6e6] bg-[#f9f9f9] p-8">
+                            <h2 className="mb-8 text-2xl font-bold text-[#252b42]">
+                                Order Summary
+                            </h2>
 
-                                                </td>
+                            <div className="space-y-5">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm font-semibold text-[#737373]">
+                                        Products Total
+                                    </span>
 
-                                                <td className="p-4 font-bold">
-                                                    {itemTotal.toFixed(
-                                                        2
-                                                    )}{" "}
-                                                    ₺
-                                                </td>
+                                    <span className="text-sm font-bold text-[#252b42]">
+                                        {formatPrice(
+                                            productsTotal
+                                        )}
+                                    </span>
+                                </div>
 
-                                                <td className="p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm font-semibold text-[#737373]">
+                                        Shipping
+                                    </span>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            dispatch(
-                                                                removeFromCart(
-                                                                    product.id
-                                                                )
-                                                            )
-                                                        }
-                                                        className="text-sm font-bold text-red-500 hover:text-red-700"
-                                                    >
-                                                        Remove
-                                                    </button>
+                                    <span className="text-sm font-bold text-[#252b42]">
+                                        {formatPrice(
+                                            shipping
+                                        )}
+                                    </span>
+                                </div>
 
-                                                </td>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm font-semibold text-[#737373]">
+                                        Discount
+                                    </span>
 
-                                            </tr>
-                                        );
-                                    }
-                                )}
-                            </tbody>
+                                    <span className="text-sm font-bold text-[#252b42]">
+                                        -{formatPrice(
+                                            discount
+                                        )}
+                                    </span>
+                                </div>
 
-                            <tfoot>
-                                <tr>
-                                    <td
-                                        colSpan="6"
-                                        className="p-6 text-right"
-                                    >
-                                        <span className="mr-4 text-sm font-bold text-[#737373]">
-                                            Selected Total:
+                                <div className="border-t border-[#dddddd] pt-5">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-base font-bold text-[#252b42]">
+                                            Grand Total
                                         </span>
 
                                         <span className="text-xl font-bold text-[#23856d]">
-                                            {total.toFixed(
-                                                2
-                                            )}{" "}
-                                            ₺
+                                            {formatPrice(
+                                                grandTotal
+                                            )}
                                         </span>
-                                    </td>
-                                </tr>
-                            </tfoot>
+                                    </div>
+                                </div>
 
-                        </table>
+                                <button
+                                    type="button"
+                                    className="mt-4 w-full rounded-md bg-[#23856d] px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d705c]"
+                                >
+                                    Create Order
+                                </button>
+                            </div>
+                        </aside>
                     </div>
                 )}
-
             </div>
         </div>
     );

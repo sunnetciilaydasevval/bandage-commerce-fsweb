@@ -33,6 +33,18 @@ const clientReducer = (state = initialState, action) => {
                 language: action.payload,
             };
 
+        case "CLIENT_SET_ADDRESS_LIST":
+            return {
+                ...state,
+                addressList: action.payload,
+            };
+
+        case "CLIENT_SET_CREDIT_CARDS":
+            return {
+                ...state,
+                creditCards: action.payload,
+            };
+
         default:
             return state;
     }

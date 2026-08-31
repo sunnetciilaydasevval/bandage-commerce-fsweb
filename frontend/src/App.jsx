@@ -5,6 +5,8 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
+  useLocation,
 } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
@@ -15,15 +17,36 @@ import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import Favorites from "./pages/Favorites";
 import ShoppingCart from "./pages/ShoppingCart";
-
 import Contact from "./pages/Contact";
 import Team from "./pages/Team";
 import AboutUs from "./pages/AboutUs";
 import SignUp from "./pages/SignUp";
+import Login from "./pages/Login";
+import CreateOrder from "./pages/CreateOrder";
 
 import {
   fetchCategories,
 } from "./redux/thunks/categoryThunk";
+
+function ProtectedRoute({ children }) {
+  const location = useLocation();
+  const token =
+    localStorage.getItem("token");
+
+  if (!token) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          from: location.pathname,
+        }}
+      />
+    );
+  }
+
+  return children;
+}
 
 export default function App() {
   const dispatch = useDispatch();
@@ -34,11 +57,8 @@ export default function App() {
 
   return (
     <Router>
-
       <PageContent>
-
         <Routes>
-
           <Route
             path="/"
             element={<Home />}
@@ -93,10 +113,21 @@ export default function App() {
             element={<SignUp />}
           />
 
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          <Route
+            path="/create-order"
+            element={
+              <ProtectedRoute>
+                <CreateOrder />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-
       </PageContent>
-
     </Router>
   );
 }
