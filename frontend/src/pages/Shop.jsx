@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import {
+    useDispatch,
+    useSelector,
+} from "react-redux";
+import {
+    useParams,
+    useSearchParams,
+} from "react-router-dom";
 
 import ProductCard from "../components/ProductCard";
-import { fetchProducts } from "../redux/thunks/productThunk";
+import {
+    fetchProducts,
+} from "../redux/thunks/productThunk";
 
 function createSlug(value = "") {
     return value
@@ -29,6 +37,11 @@ export default function Shop() {
         categoryId,
     } = useParams();
 
+    const [
+        searchParams,
+        setSearchParams,
+    ] = useSearchParams();
+
     const {
         productList,
         total,
@@ -37,10 +50,22 @@ export default function Shop() {
         (state) => state.product
     );
 
-    const [filter, setFilter] = useState("");
-    const [sort, setSort] = useState("");
+    const [filter, setFilter] =
+        useState(
+            searchParams.get("filter") || ""
+        );
+
+    const [sort, setSort] =
+        useState(
+            searchParams.get("sort") || ""
+        );
+
     const [currentPage, setCurrentPage] =
-        useState(1);
+        useState(
+            Number(
+                searchParams.get("page")
+            ) || 1
+        );
 
     const limit = 25;
 
@@ -56,12 +81,44 @@ export default function Shop() {
     );
 
     /*
+     * URL değiştiğinde search state'ini
+     * URL ile senkronize et.
+     */
+    useEffect(() => {
+        const urlFilter =
+            searchParams.get("filter") || "";
+
+        const urlSort =
+            searchParams.get("sort") || "";
+
+        const urlPage =
+            Number(
+                searchParams.get("page")
+            ) || 1;
+
+        setFilter(urlFilter);
+        setSort(urlSort);
+        setCurrentPage(urlPage);
+    }, [searchParams]);
+
+    /*
      * Category değiştiğinde
      * 1. sayfaya dön.
      */
     useEffect(() => {
         setCurrentPage(1);
-    }, [category]);
+
+        const params =
+            new URLSearchParams(
+                searchParams
+            );
+
+        params.delete("page");
+
+        setSearchParams(params);
+    }, [
+        category,
+    ]);
 
     /*
      * Category / filter / sort / page
@@ -86,17 +143,65 @@ export default function Shop() {
         offset,
     ]);
 
-    const handleFilterChange = (event) => {
-        setFilter(event.target.value);
+    const handleFilterChange = (
+        event
+    ) => {
+        const value =
+            event.target.value;
+
+        setFilter(value);
         setCurrentPage(1);
+
+        const params =
+            new URLSearchParams(
+                searchParams
+            );
+
+        if (value) {
+            params.set(
+                "filter",
+                value
+            );
+        } else {
+            params.delete("filter");
+        }
+
+        params.delete("page");
+
+        setSearchParams(params);
     };
 
-    const handleSortChange = (event) => {
-        setSort(event.target.value);
+    const handleSortChange = (
+        event
+    ) => {
+        const value =
+            event.target.value;
+
+        setSort(value);
         setCurrentPage(1);
+
+        const params =
+            new URLSearchParams(
+                searchParams
+            );
+
+        if (value) {
+            params.set(
+                "sort",
+                value
+            );
+        } else {
+            params.delete("sort");
+        }
+
+        params.delete("page");
+
+        setSearchParams(params);
     };
 
-    const handlePageChange = (page) => {
+    const handlePageChange = (
+        page
+    ) => {
         if (
             page < 1 ||
             page > totalPages ||
@@ -106,6 +211,22 @@ export default function Shop() {
         }
 
         setCurrentPage(page);
+
+        const params =
+            new URLSearchParams(
+                searchParams
+            );
+
+        if (page === 1) {
+            params.delete("page");
+        } else {
+            params.set(
+                "page",
+                String(page)
+            );
+        }
+
+        setSearchParams(params);
     };
 
     const getPageNumbers = () => {

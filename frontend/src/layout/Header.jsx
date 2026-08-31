@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import {
     Phone,
     Mail,
-    UserRound,
     Search,
     ShoppingCart,
     Heart,
@@ -49,6 +48,8 @@ function createCategoryUrl(category) {
 }
 
 export default function Header() {
+    const navigate = useNavigate();
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] =
         useState(false);
 
@@ -60,6 +61,12 @@ export default function Header() {
 
     const [isUserMenuOpen, setIsUserMenuOpen] =
         useState(false);
+
+    const [isSearchOpen, setIsSearchOpen] =
+        useState(false);
+
+    const [searchTerm, setSearchTerm] =
+        useState("");
 
     const categories = useSelector(
         (state) =>
@@ -116,6 +123,37 @@ export default function Header() {
         setMobileCategoryOpen(false);
     };
 
+    const handleSearch = (event) => {
+        event.preventDefault();
+
+        const trimmedSearch =
+            searchTerm.trim();
+
+        if (!trimmedSearch) {
+            navigate("/shop");
+            setIsSearchOpen(false);
+            return;
+        }
+
+        navigate(
+            `/shop?filter=${encodeURIComponent(
+                trimmedSearch
+            )}`
+        );
+
+        setIsSearchOpen(false);
+        closeMobileMenu();
+    };
+
+    const openSearch = () => {
+        setIsSearchOpen(true);
+    };
+
+    const closeSearch = () => {
+        setIsSearchOpen(false);
+        setSearchTerm("");
+    };
+
     return (
         <header className="w-full bg-white font-['Montserrat',sans-serif]">
 
@@ -124,15 +162,21 @@ export default function Header() {
 
                 <div className="hidden items-center gap-4 lg:flex">
 
-                    <span className="flex items-center gap-1">
+                    <a
+                        href="tel:+12255550118"
+                        className="flex items-center gap-1 transition-opacity hover:opacity-70"
+                    >
                         <Phone size={16} />
                         (225) 555-0118
-                    </span>
+                    </a>
 
-                    <span className="flex items-center gap-1">
+                    <a
+                        href="mailto:michelle.rivera@example.com"
+                        className="flex items-center gap-1 transition-opacity hover:opacity-70"
+                    >
                         <Mail size={16} />
                         michelle.rivera@example.com
-                    </span>
+                    </a>
 
                 </div>
 
@@ -147,7 +191,9 @@ export default function Header() {
                     </span>
 
                     <a
-                        href="#"
+                        href="https://instagram.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         aria-label="Instagram"
                         className="transition-opacity hover:opacity-70"
                     >
@@ -155,7 +201,9 @@ export default function Header() {
                     </a>
 
                     <a
-                        href="#"
+                        href="https://youtube.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         aria-label="YouTube"
                         className="transition-opacity hover:opacity-70"
                     >
@@ -163,7 +211,9 @@ export default function Header() {
                     </a>
 
                     <a
-                        href="#"
+                        href="https://facebook.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         aria-label="Facebook"
                         className="transition-opacity hover:opacity-70"
                     >
@@ -171,8 +221,10 @@ export default function Header() {
                     </a>
 
                     <a
-                        href="#"
-                        aria-label="Twitter"
+                        href="https://x.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="X"
                         className="transition-opacity hover:opacity-70"
                     >
                         <FaTwitter size={16} />
@@ -191,7 +243,7 @@ export default function Header() {
                     onClick={closeMobileMenu}
                     className="text-[24px] font-bold leading-8 tracking-[0.1px] text-[#252b42]"
                 >
-                    BrandName
+                    Bandage
                 </Link>
 
                 {/* DESKTOP NAV */}
@@ -328,6 +380,7 @@ export default function Header() {
                 {/* DESKTOP ACTIONS */}
                 <div className="hidden items-center gap-1 lg:flex">
 
+                    {/* ACCOUNT */}
                     {isLoggedIn ? (
                         <div className="relative">
 
@@ -339,10 +392,8 @@ export default function Header() {
                                             !current
                                     )
                                 }
-                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                             >
-                                <UserRound size={16} />
-
                                 <span>
                                     {userName}
                                 </span>
@@ -366,7 +417,7 @@ export default function Header() {
                                                 false
                                             )
                                         }
-                                        className="block px-4 py-3 text-sm font-bold text-[#737373] hover:bg-[#f5f5f5] hover:text-[#23a6f0]"
+                                        className="block px-4 py-3 text-sm font-bold text-[#737373] transition-colors hover:bg-[#f5f5f5] hover:text-[#23a6f0]"
                                     >
                                         Previous Orders
                                     </Link>
@@ -379,34 +430,64 @@ export default function Header() {
                         <>
                             <Link
                                 to="/login"
-                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                className="rounded-full p-3 text-[14px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                             >
-                                <UserRound size={16} />
                                 Login
                             </Link>
 
                             <Link
                                 to="/signup"
-                                className="rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                                className="rounded-full bg-[#23a6f0] px-5 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#1d96dc]"
                             >
-                                Register
+                                Sign Up
                             </Link>
                         </>
                     )}
 
-                    <button
-                        type="button"
-                        aria-label="Search"
-                        className="rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
-                    >
-                        <Search size={18} />
-                    </button>
+                    {/* SEARCH */}
+                    {isSearchOpen ? (
+                        <form
+                            onSubmit={handleSearch}
+                            className="flex items-center gap-2"
+                        >
+                            <input
+                                type="search"
+                                value={searchTerm}
+                                onChange={(event) =>
+                                    setSearchTerm(
+                                        event.target.value
+                                    )
+                                }
+                                autoFocus
+                                placeholder="Search products..."
+                                className="w-48 rounded-full border border-[#ececec] px-4 py-2 text-sm text-[#252b42] outline-none focus:border-[#23a6f0]"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={closeSearch}
+                                aria-label="Close search"
+                                className="rounded-full p-2 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                            >
+                                <X size={18} />
+                            </button>
+                        </form>
+                    ) : (
+                        <button
+                            type="button"
+                            aria-label="Search"
+                            onClick={openSearch}
+                            className="rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        >
+                            <Search size={18} />
+                        </button>
+                    )}
 
                     {/* CART */}
                     <Link
                         to="/cart"
                         aria-label="Shopping cart"
-                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
+                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                     >
                         <ShoppingCart size={18} />
 
@@ -419,7 +500,7 @@ export default function Header() {
                     <Link
                         to="/favorites"
                         aria-label="Favorites"
-                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] hover:bg-[#f5f5f5]"
+                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                     >
                         <Heart
                             size={18}
@@ -440,14 +521,46 @@ export default function Header() {
                 {/* MOBILE ACTIONS */}
                 <div className="flex items-center gap-5 lg:hidden">
 
-                    <button
-                        type="button"
-                        aria-label="Search"
-                        className="p-0 text-[#252b42]"
-                    >
-                        <Search size={22} />
-                    </button>
+                    {/* SEARCH */}
+                    {isSearchOpen ? (
+                        <form
+                            onSubmit={handleSearch}
+                            className="absolute left-4 right-4 top-[82px] z-50 flex items-center gap-2 bg-white py-3"
+                        >
+                            <input
+                                type="search"
+                                value={searchTerm}
+                                onChange={(event) =>
+                                    setSearchTerm(
+                                        event.target.value
+                                    )
+                                }
+                                autoFocus
+                                placeholder="Search products..."
+                                className="min-w-0 flex-1 rounded-full border border-[#ececec] px-4 py-3 text-sm text-[#252b42] outline-none focus:border-[#23a6f0]"
+                            />
 
+                            <button
+                                type="button"
+                                onClick={closeSearch}
+                                aria-label="Close search"
+                                className="rounded-full p-2 text-[#252b42]"
+                            >
+                                <X size={22} />
+                            </button>
+                        </form>
+                    ) : (
+                        <button
+                            type="button"
+                            aria-label="Search"
+                            onClick={openSearch}
+                            className="p-0 text-[#252b42]"
+                        >
+                            <Search size={22} />
+                        </button>
+                    )}
+
+                    {/* CART */}
                     <Link
                         to="/cart"
                         aria-label="Shopping cart"
@@ -462,6 +575,7 @@ export default function Header() {
                         )}
                     </Link>
 
+                    {/* FAVORITES */}
                     <Link
                         to="/favorites"
                         aria-label="Favorites"
@@ -476,6 +590,7 @@ export default function Header() {
                         )}
                     </Link>
 
+                    {/* MOBILE MENU */}
                     <button
                         type="button"
                         aria-label={
@@ -511,6 +626,7 @@ export default function Header() {
 
                     <div className="flex flex-col items-center gap-6 text-center">
 
+                        {/* MOBILE ACCOUNT */}
                         {!isLoggedIn && (
                             <div className="flex items-center gap-4">
 
@@ -519,23 +635,19 @@ export default function Header() {
                                     onClick={
                                         closeMobileMenu
                                     }
-                                    className="text-[24px] leading-8 text-[#23a6f0]"
+                                    className="rounded-full px-4 py-2 text-[24px] leading-8 text-[#23a6f0]"
                                 >
                                     Login
                                 </Link>
-
-                                <span className="text-[#d9d9d9]">
-                                    /
-                                </span>
 
                                 <Link
                                     to="/signup"
                                     onClick={
                                         closeMobileMenu
                                     }
-                                    className="text-[24px] leading-8 text-[#23a6f0]"
+                                    className="rounded-full bg-[#23a6f0] px-5 py-2 text-[24px] leading-8 text-white transition-colors hover:bg-[#1d96dc]"
                                 >
-                                    Register
+                                    Sign Up
                                 </Link>
 
                             </div>
@@ -553,6 +665,7 @@ export default function Header() {
                             </Link>
                         )}
 
+                        {/* NAV ITEMS */}
                         {navItems.map(
                             ([label, href]) => (
                                 <Link
