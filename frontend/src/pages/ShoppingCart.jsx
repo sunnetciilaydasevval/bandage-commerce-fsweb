@@ -2,6 +2,7 @@ import {
     useDispatch,
     useSelector,
 } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import {
     increaseCartItem,
@@ -12,58 +13,80 @@ import {
 
 export default function ShoppingCart() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const cart =
         useSelector(
             (state) =>
-                state.shoppingCart.cart
+                state.shoppingCart?.cart
         ) || [];
 
     const payment =
         useSelector(
             (state) =>
-                state.shoppingCart.payment
+                state.shoppingCart?.payment
         ) || {};
 
     const selectedItems =
         cart.filter(
-            (item) => item.checked
+            (item) =>
+                item.checked !== false
         );
 
     const productsTotal =
         selectedItems.reduce(
             (sum, item) =>
                 sum +
-                Number(item.product.price) *
-                    item.count,
+                Number(
+                    item?.product?.discountedPrice ??
+                    item?.product?.price ??
+                    0
+                ) *
+                Number(
+                    item?.count || 0
+                ),
             0
         );
 
-    const shipping =
-        Number(
-            payment.shippingPrice ??
-                payment.shipping ??
-                payment.paymentPrice ??
-                0
-        );
+    const shipping = Number(
+        payment.shippingPrice ??
+        payment.shipping ??
+        payment.paymentPrice ??
+        0
+    );
 
-    const discount =
-        Number(
-            payment.discountAmount ??
-                payment.discount ??
-                0
-        );
+    const discount = Number(
+        payment.discountAmount ??
+        payment.discount ??
+        0
+    );
 
-    const grandTotal =
+    const grandTotal = Math.max(
+        0,
         productsTotal +
         shipping -
-        discount;
+        discount
+    );
 
     const formatPrice = (price) =>
         `${Number(price).toFixed(2)} ₺`;
 
+    const handleCreateOrder = () => {
+        if (selectedItems.length === 0) {
+            alert(
+                "Please select at least one product."
+            );
+
+            return;
+        }
+
+        navigate(
+            "/create-order"
+        );
+    };
+
     return (
-        <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
+        <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1200px]">
                 <h1 className="mb-10 text-3xl font-bold">
                     Shopping Cart
@@ -71,7 +94,8 @@ export default function ShoppingCart() {
 
                 {cart.length === 0 ? (
                     <div className="py-20 text-center text-[#737373]">
-                        Your shopping cart is empty.
+                        Your shopping cart is
+                        empty.
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_350px] lg:items-start">
@@ -107,15 +131,28 @@ export default function ShoppingCart() {
 
                                 <tbody>
                                     {cart.map(
-                                        (item) => {
+                                        (
+                                            item
+                                        ) => {
                                             const product =
                                                 item.product;
 
-                                            const itemTotal =
+                                            const price =
                                                 Number(
-                                                    product.price
-                                                ) *
-                                                item.count;
+                                                    product?.discountedPrice ??
+                                                    product?.price ??
+                                                    0
+                                                );
+
+                                            const count =
+                                                Number(
+                                                    item?.count ||
+                                                    0
+                                                );
+
+                                            const itemTotal =
+                                                price *
+                                                count;
 
                                             return (
                                                 <tr
@@ -128,7 +165,8 @@ export default function ShoppingCart() {
                                                         <input
                                                             type="checkbox"
                                                             checked={
-                                                                item.checked
+                                                                item.checked !==
+                                                                false
                                                             }
                                                             onChange={() =>
                                                                 dispatch(
@@ -137,6 +175,7 @@ export default function ShoppingCart() {
                                                                     )
                                                                 )
                                                             }
+                                                            aria-label={`Select ${product.name}`}
                                                         />
                                                     </td>
 
@@ -163,12 +202,9 @@ export default function ShoppingCart() {
                                                     </td>
 
                                                     <td className="p-4">
-                                                        {Number(
-                                                            product.price
-                                                        ).toFixed(
-                                                            2
-                                                        )}{" "}
-                                                        ₺
+                                                        {formatPrice(
+                                                            price
+                                                        )}
                                                     </td>
 
                                                     <td className="p-4">
@@ -183,13 +219,14 @@ export default function ShoppingCart() {
                                                                     )
                                                                 }
                                                                 className="h-8 w-8 border"
+                                                                aria-label="Decrease quantity"
                                                             >
                                                                 -
                                                             </button>
 
                                                             <span>
                                                                 {
-                                                                    item.count
+                                                                    count
                                                                 }
                                                             </span>
 
@@ -203,6 +240,7 @@ export default function ShoppingCart() {
                                                                     )
                                                                 }
                                                                 className="h-8 w-8 border"
+                                                                aria-label="Increase quantity"
                                                             >
                                                                 +
                                                             </button>
@@ -210,10 +248,9 @@ export default function ShoppingCart() {
                                                     </td>
 
                                                     <td className="p-4 font-bold">
-                                                        {itemTotal.toFixed(
-                                                            2
-                                                        )}{" "}
-                                                        ₺
+                                                        {formatPrice(
+                                                            itemTotal
+                                                        )}
                                                     </td>
 
                                                     <td className="p-4">
@@ -244,7 +281,8 @@ export default function ShoppingCart() {
                                             className="p-6 text-right"
                                         >
                                             <span className="mr-4 text-sm font-bold text-[#737373]">
-                                                Selected Total:
+                                                Selected
+                                                Total:
                                             </span>
 
                                             <span className="text-xl font-bold text-[#23856d]">
@@ -259,17 +297,18 @@ export default function ShoppingCart() {
                         </div>
 
                         <aside className="w-full rounded-md border border-[#e6e6e6] bg-[#f9f9f9] p-8">
-                            <h2 className="mb-8 text-2xl font-bold text-[#252b42]">
+                            <h2 className="mb-8 text-2xl font-bold">
                                 Order Summary
                             </h2>
 
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-sm font-semibold text-[#737373]">
-                                        Products Total
+                                        Products
+                                        Total
                                     </span>
 
-                                    <span className="text-sm font-bold text-[#252b42]">
+                                    <span className="text-sm font-bold">
                                         {formatPrice(
                                             productsTotal
                                         )}
@@ -281,7 +320,7 @@ export default function ShoppingCart() {
                                         Shipping
                                     </span>
 
-                                    <span className="text-sm font-bold text-[#252b42]">
+                                    <span className="text-sm font-bold">
                                         {formatPrice(
                                             shipping
                                         )}
@@ -293,8 +332,9 @@ export default function ShoppingCart() {
                                         Discount
                                     </span>
 
-                                    <span className="text-sm font-bold text-[#252b42]">
-                                        -{formatPrice(
+                                    <span className="text-sm font-bold">
+                                        -
+                                        {formatPrice(
                                             discount
                                         )}
                                     </span>
@@ -302,8 +342,9 @@ export default function ShoppingCart() {
 
                                 <div className="border-t border-[#dddddd] pt-5">
                                     <div className="flex items-center justify-between gap-4">
-                                        <span className="text-base font-bold text-[#252b42]">
-                                            Grand Total
+                                        <span className="text-base font-bold">
+                                            Grand
+                                            Total
                                         </span>
 
                                         <span className="text-xl font-bold text-[#23856d]">
@@ -316,15 +357,23 @@ export default function ShoppingCart() {
 
                                 <button
                                     type="button"
-                                    className="mt-4 w-full rounded-md bg-[#23856d] px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d705c]"
+                                    onClick={
+                                        handleCreateOrder
+                                    }
+                                    disabled={
+                                        selectedItems.length ===
+                                        0
+                                    }
+                                    className="mt-4 w-full rounded-md bg-[#23856d] px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d705c] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Create Order
+                                    Create
+                                    Order
                                 </button>
                             </div>
                         </aside>
                     </div>
                 )}
             </div>
-        </div>
+        </main>
     );
 }

@@ -1,8 +1,21 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import {
+    Heart,
+    ShoppingCart,
+    Plus,
+    Minus,
+    Trash2,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { toggleFavorite } from "../redux/actions/favoriteActions";
+
+import {
+    addToCart,
+    increaseCartItem,
+    decreaseCartItem,
+    removeFromCart,
+} from "../redux/actions/shoppingCartActions";
 
 export default function ProductCard({
     product,
@@ -15,17 +28,22 @@ export default function ProductCard({
             state.favorite?.favorites || []
     );
 
+    const cart = useSelector(
+        (state) =>
+            state.shoppingCart?.cart || []
+    );
+
     const isFavorite = favorites.some(
         (favorite) =>
             favorite.id === product.id
     );
 
-    const colorClasses = [
-        "bg-[#23a6f0]",
-        "bg-[#2dc071]",
-        "bg-[#e77c40]",
-        "bg-[#252b42]",
-    ];
+    const cartItem = cart.find(
+        (item) =>
+            item.product.id === product.id
+    );
+
+    const cartCount = cartItem?.count || 0;
 
     const image =
         product?.images?.[0]?.url ||
@@ -38,8 +56,36 @@ export default function ProductCard({
         dispatch(toggleFavorite(product));
     };
 
+    const handleAddToCart = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        dispatch(addToCart(product));
+    };
+
+    const handleIncrease = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        dispatch(increaseCartItem(product.id));
+    };
+
+    const handleDecrease = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        dispatch(decreaseCartItem(product.id));
+    };
+
+    const handleRemove = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        dispatch(removeFromCart(product.id));
+    };
+
     return (
-        <article className="flex w-full max-w-[239px] flex-col bg-white">
+        <article className="flex w-full max-w-[239px] flex-col overflow-hidden bg-white">
 
             {/* IMAGE */}
             <div className="relative overflow-hidden">
@@ -87,6 +133,7 @@ export default function ProductCard({
             {/* CONTENT */}
             <div className="flex flex-col gap-2 px-5 py-6">
 
+                {/* NAME */}
                 <Link
                     to={
                         productUrl ||
@@ -97,27 +144,73 @@ export default function ProductCard({
                     {product.name}
                 </Link>
 
+                {/* DESCRIPTION */}
                 <p className="line-clamp-2 text-[14px] leading-5 tracking-[0.2px] text-[#737373]">
                     {product.description}
                 </p>
 
+                {/* PRICE */}
                 <p className="text-[14px] font-bold leading-6 tracking-[0.2px] text-[#23856d]">
                     {Number(product.price).toFixed(2)} ₺
                 </p>
 
-                <div
-                    className="flex gap-1.5 pt-1"
-                    aria-label="Available colors"
-                >
-                    {colorClasses.map(
-                        (colorClass) => (
-                            <span
-                                key={colorClass}
-                                className={`h-4 w-4 rounded-full ${colorClass}`}
+                {/* CART */}
+                {!cartItem ? (
+                    <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        className="mt-3 flex w-full items-center justify-center gap-2 bg-[#23a6f0] px-3 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d91d0]"
+                    >
+                        <ShoppingCart size={16} />
+                        ADD TO CART
+                    </button>
+                ) : (
+                    <div className="mt-3 flex h-11 w-full items-center border border-[#23a6f0]">
+
+                        {/* DECREASE / REMOVE */}
+                        <button
+                            type="button"
+                            onClick={
+                                cartCount === 1
+                                    ? handleRemove
+                                    : handleDecrease
+                            }
+                            aria-label={
+                                cartCount === 1
+                                    ? "Remove from cart"
+                                    : "Decrease quantity"
+                            }
+                            className="flex h-full w-10 items-center justify-center text-[#23a6f0] transition-colors hover:bg-[#f0f9ff]"
+                        >
+                            {cartCount === 1 ? (
+                                <Trash2 size={16} />
+                            ) : (
+                                <Minus size={16} />
+                            )}
+                        </button>
+
+                        {/* COUNT */}
+                        <div className="flex flex-1 items-center justify-center gap-2 text-xs font-bold text-[#252b42]">
+                            <ShoppingCart
+                                size={15}
+                                className="text-[#23a6f0]"
                             />
-                        )
-                    )}
-                </div>
+
+                            {cartCount}
+                        </div>
+
+                        {/* INCREASE */}
+                        <button
+                            type="button"
+                            onClick={handleIncrease}
+                            aria-label="Increase quantity"
+                            className="flex h-full w-10 items-center justify-center text-[#23a6f0] transition-colors hover:bg-[#f0f9ff]"
+                        >
+                            <Plus size={16} />
+                        </button>
+
+                    </div>
+                )}
 
             </div>
 

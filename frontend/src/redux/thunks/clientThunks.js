@@ -1,4 +1,7 @@
-import { setRoles, setCreditCards } from "../actions/clientActions";
+import {
+    setRoles,
+    setCreditCards,
+} from "../actions/clientActions";
 
 import {
     getRoles as fetchRoles,
@@ -17,7 +20,8 @@ let rolesRequestStarted = false;
 
 export const getRoles = () => {
     return async (dispatch, getState) => {
-        const roles = getState().client.roles;
+        const roles =
+            getState().client?.roles || [];
 
         if (
             roles.length > 0 ||
@@ -33,7 +37,9 @@ export const getRoles = () => {
                 await fetchRoles();
 
             dispatch(
-                setRoles(response.data)
+                setRoles(
+                    response.data || []
+                )
             );
         } catch (error) {
             console.error(
@@ -42,6 +48,8 @@ export const getRoles = () => {
             );
 
             rolesRequestStarted = false;
+
+            throw error;
         }
     };
 };
@@ -50,17 +58,24 @@ export const getAddresses = () => {
     return async (dispatch) => {
         try {
             const response =
-                await api.get("/user/address");
+                await api.get(
+                    "/user/address"
+                );
 
             dispatch({
                 type: "SET_ADDRESS_LIST",
-                payload: response.data,
+                payload:
+                    response.data || [],
             });
+
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to fetch addresses:",
                 error
             );
+
+            throw error;
         }
     };
 };
@@ -70,12 +85,17 @@ export const addAddress = (
 ) => {
     return async (dispatch) => {
         try {
-            await api.post(
-                "/user/address",
-                addressData
+            const response =
+                await api.post(
+                    "/user/address",
+                    addressData
+                );
+
+            await dispatch(
+                getAddresses()
             );
 
-            dispatch(getAddresses());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to create address:",
@@ -92,12 +112,17 @@ export const updateAddress = (
 ) => {
     return async (dispatch) => {
         try {
-            await api.put(
-                "/user/address",
-                addressData
+            const response =
+                await api.put(
+                    "/user/address",
+                    addressData
+                );
+
+            await dispatch(
+                getAddresses()
             );
 
-            dispatch(getAddresses());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to update address:",
@@ -114,11 +139,16 @@ export const deleteAddress = (
 ) => {
     return async (dispatch) => {
         try {
-            await api.delete(
-                `/user/address/${addressId}`
+            const response =
+                await api.delete(
+                    `/user/address/${addressId}`
+                );
+
+            await dispatch(
+                getAddresses()
             );
 
-            dispatch(getAddresses());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to delete address:",
@@ -136,16 +166,21 @@ export const fetchCards = () => {
             const response =
                 await getCards();
 
+            const cards =
+                response.data || [];
+
             dispatch(
-                setCreditCards(
-                    response.data
-                )
+                setCreditCards(cards)
             );
+
+            return cards;
         } catch (error) {
             console.error(
                 "Failed to fetch cards:",
                 error
             );
+
+            throw error;
         }
     };
 };
@@ -155,11 +190,16 @@ export const addCard = (
 ) => {
     return async (dispatch) => {
         try {
-            await createCard(
-                cardData
+            const response =
+                await createCard(
+                    cardData
+                );
+
+            await dispatch(
+                fetchCards()
             );
 
-            dispatch(fetchCards());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to create card:",
@@ -176,11 +216,16 @@ export const editCard = (
 ) => {
     return async (dispatch) => {
         try {
-            await updateCard(
-                cardData
+            const response =
+                await updateCard(
+                    cardData
+                );
+
+            await dispatch(
+                fetchCards()
             );
 
-            dispatch(fetchCards());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to update card:",
@@ -197,11 +242,16 @@ export const removeCard = (
 ) => {
     return async (dispatch) => {
         try {
-            await deleteCard(
-                cardId
+            const response =
+                await deleteCard(
+                    cardId
+                );
+
+            await dispatch(
+                fetchCards()
             );
 
-            dispatch(fetchCards());
+            return response.data;
         } catch (error) {
             console.error(
                 "Failed to delete card:",
@@ -242,12 +292,15 @@ export const getOrders = () => {
             const response =
                 await api.get("/order");
 
+            const orders =
+                response.data || [];
+
             dispatch({
                 type: "CLIENT_SET_ORDERS",
-                payload: response.data,
+                payload: orders,
             });
 
-            return response.data;
+            return orders;
         } catch (error) {
             console.error(
                 "Failed to fetch orders:",

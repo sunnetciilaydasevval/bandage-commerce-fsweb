@@ -1,30 +1,14 @@
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import { Heart } from "lucide-react";
+import { useSelector } from "react-redux";
 
-import {
-    removeFavorite,
-} from "../redux/actions/favoriteActions";
-
-import {
-    addToCart,
-} from "../redux/actions/shoppingCartActions";
+import ProductCard from "../components/ProductCard";
 
 export default function Favorites() {
-    const dispatch = useDispatch();
-
     const favorites = useSelector(
         (state) =>
             state.favorite?.favorites || []
     );
-
-    const handleRemove = (productId) => {
-        dispatch(removeFavorite(productId));
-    };
-
-    const handleAddToCart = (product) => {
-        dispatch(addToCart(product));
-    };
 
     return (
         <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
@@ -79,112 +63,22 @@ export default function Favorites() {
 
                     </div>
                 ) : (
-                    <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div className="flex flex-wrap justify-center gap-4">
 
                         {favorites.map(
-                            (product) => {
-                                const image =
-                                    product?.images?.[0]?.url ||
-                                    "https://via.placeholder.com/300x365?text=No+Image";
-
-                                return (
-                                    <div
-                                        key={
-                                            product.id
-                                        }
-                                        className="overflow-hidden border border-[#eeeeee] bg-white"
-                                    >
-
-                                        <Link
-                                            to={`/product/${product.id}`}
-                                            className="block overflow-hidden"
-                                        >
-                                            <img
-                                                src={
-                                                    image
-                                                }
-                                                alt={
-                                                    product.name
-                                                }
-                                                className="aspect-[0.82] w-full object-cover transition-transform duration-300 hover:scale-105"
-                                            />
-                                        </Link>
-
-                                        <div className="p-5">
-
-                                            <Link
-                                                to={`/product/${product.id}`}
-                                                className="mb-2 block text-sm font-bold text-[#252b42] hover:text-[#23a6f0]"
-                                            >
-                                                {
-                                                    product.name
-                                                }
-                                            </Link>
-
-                                            <p className="mb-4 line-clamp-2 text-xs leading-5 text-[#737373]">
-                                                {
-                                                    product.description
-                                                }
-                                            </p>
-
-                                            <p className="mb-5 text-sm font-bold text-[#23856d]">
-                                                {Number(
-                                                    product.price
-                                                ).toFixed(
-                                                    2
-                                                )}{" "}
-                                                ₺
-                                            </p>
-
-                                            <div className="flex gap-2">
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleAddToCart(
-                                                            product
-                                                        )
-                                                    }
-                                                    className="flex flex-1 items-center justify-center gap-2 bg-[#23a6f0] px-3 py-3 text-xs font-bold text-white hover:bg-[#1d91d0]"
-                                                >
-                                                    <ShoppingCart
-                                                        size={
-                                                            16
-                                                        }
-                                                    />
-                                                    ADD TO CART
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleRemove(
-                                                            product.id
-                                                        )
-                                                    }
-                                                    aria-label="Remove from favorites"
-                                                    className="flex h-11 w-11 items-center justify-center border border-[#eeeeee] text-red-500 hover:bg-red-50"
-                                                >
-                                                    <Trash2
-                                                        size={
-                                                            17
-                                                        }
-                                                    />
-                                                </button>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-                                );
-                            }
+                            (product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                />
+                            )
                         )}
 
                     </div>
                 )}
 
             </div>
+
         </div>
     );
 }

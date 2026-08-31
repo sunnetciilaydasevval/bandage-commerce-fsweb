@@ -29,13 +29,10 @@ import {
   fetchCategories,
 } from "./redux/thunks/categoryThunk";
 
-function ProtectedRoute({
-  children,
-}) {
+function ProtectedRoute({ children }) {
   const location = useLocation();
 
-  const token =
-    localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   if (!token) {
     return (
@@ -52,7 +49,7 @@ function ProtectedRoute({
   return children;
 }
 
-export default function App() {
+function AppRoutes() {
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -60,89 +57,99 @@ export default function App() {
   }, [dispatch]);
 
   return (
+    <PageContent>
+      <Routes>
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/shop"
+          element={<Shop />}
+        />
+
+        <Route
+          path="/shop/:gender/:categoryName/:categoryId"
+          element={<Shop />}
+        />
+
+        <Route
+          path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
+          element={<Product />}
+        />
+
+        <Route
+          path="/cart"
+          element={<ShoppingCart />}
+        />
+
+        <Route
+          path="/favorites"
+          element={<Favorites />}
+        />
+
+        <Route
+          path="/contact"
+          element={<Contact />}
+        />
+
+        <Route
+          path="/team"
+          element={<Team />}
+        />
+
+        <Route
+          path="/about"
+          element={<AboutUs />}
+        />
+
+        <Route
+          path="/signup"
+          element={<SignUp />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/create-order"
+          element={
+            <ProtectedRoute>
+              <CreateOrder />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/previous-orders"
+          element={
+            <ProtectedRoute>
+              <PreviousOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
+      </Routes>
+    </PageContent>
+  );
+}
+
+export default function App() {
+  return (
     <Router>
-      <PageContent>
-        <Routes>
-
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          <Route
-            path="/shop"
-            element={<Shop />}
-          />
-
-          <Route
-            path="/shop/:gender/:categoryName/:categoryId"
-            element={<Shop />}
-          />
-
-          <Route
-            path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
-            element={<Product />}
-          />
-
-          <Route
-            path="/cart"
-            element={
-              <ShoppingCart />
-            }
-          />
-
-          <Route
-            path="/favorites"
-            element={
-              <Favorites />
-            }
-          />
-
-          <Route
-            path="/contact"
-            element={<Contact />}
-          />
-
-          <Route
-            path="/team"
-            element={<Team />}
-          />
-
-          <Route
-            path="/about"
-            element={<AboutUs />}
-          />
-
-          <Route
-            path="/signup"
-            element={<SignUp />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/create-order"
-            element={
-              <ProtectedRoute>
-                <CreateOrder />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/previous-orders"
-            element={
-              <ProtectedRoute>
-                <PreviousOrders />
-              </ProtectedRoute>
-            }
-          />
-
-        </Routes>
-      </PageContent>
+      <AppRoutes />
     </Router>
   );
 }

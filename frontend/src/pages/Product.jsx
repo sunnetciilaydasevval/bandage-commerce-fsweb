@@ -31,10 +31,12 @@ export default function Product() {
         (state) => state.product
     );
 
-    const favorites = useSelector(
-        (state) =>
-            state.favorite?.favorites || []
-    );
+    const favorites =
+        useSelector(
+            (state) =>
+                state.favorite?.favorites ||
+                []
+        );
 
     const {
         productId,
@@ -44,18 +46,23 @@ export default function Product() {
     } = useParams();
 
     useEffect(() => {
-        if (productId) {
-            dispatch(
-                fetchProduct(productId)
-            );
+        if (!productId) {
+            return;
         }
+
+        dispatch(
+            fetchProduct(productId)
+        );
     }, [dispatch, productId]);
 
     const isFavorite =
-        product &&
-        favorites.some(
-            (favorite) =>
-                favorite.id === product.id
+        Boolean(
+            product &&
+            favorites.some(
+                (favorite) =>
+                    favorite.id ===
+                    product.id
+            )
         );
 
     const backUrl =
@@ -66,23 +73,32 @@ export default function Product() {
             : "/shop";
 
     const handleAddToCart = () => {
-        if (product) {
-            dispatch(addToCart(product));
+        if (!product) {
+            return;
         }
+
+        dispatch(
+            addToCart(product)
+        );
     };
 
     const handleFavorite = () => {
-        if (product) {
-            dispatch(
-                toggleFavorite(product)
-            );
+        if (!product) {
+            return;
         }
+
+        dispatch(
+            toggleFavorite(product)
+        );
     };
 
     if (fetchState === "FETCHING") {
         return (
             <div className="flex min-h-[600px] items-center justify-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
+                <div
+                    className="h-12 w-12 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]"
+                    aria-label="Loading"
+                />
             </div>
         );
     }
@@ -91,7 +107,8 @@ export default function Product() {
         return (
             <div className="flex min-h-[600px] flex-col items-center justify-center gap-6">
                 <p className="text-red-500">
-                    Product could not be loaded.
+                    Product could not be
+                    loaded.
                 </p>
 
                 <Link
@@ -112,57 +129,63 @@ export default function Product() {
         product?.images?.[0]?.url ||
         "https://via.placeholder.com/600x700?text=No+Image";
 
+    const price = Number(
+        product?.discountedPrice ??
+        product?.price ??
+        0
+    );
+
     return (
-        <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
-
+        <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
-
-                {/* BACK */}
                 <Link
                     to={backUrl}
                     className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#737373] hover:text-[#23a6f0]"
                 >
-                    <ArrowLeft size={18} />
+                    <ArrowLeft
+                        size={18}
+                    />
+
                     Back to Shop
                 </Link>
 
                 <div className="grid gap-10 md:grid-cols-2">
-
-                    {/* IMAGE */}
                     <div className="overflow-hidden bg-[#f5f5f5]">
-
                         <img
                             src={image}
-                            alt={product.name}
+                            alt={
+                                product.name ||
+                                "Product"
+                            }
                             className="h-full max-h-[650px] w-full object-cover"
                         />
-
                     </div>
 
-                    {/* INFO */}
                     <div className="flex flex-col justify-center">
-
                         <p className="mb-3 text-sm font-bold uppercase tracking-wide text-[#23a6f0]">
                             Product
                         </p>
 
                         <h1 className="mb-5 text-3xl font-bold leading-tight">
-                            {product.name}
+                            {
+                                product.name
+                            }
                         </h1>
 
                         <p className="mb-6 text-xl font-bold text-[#23856d]">
-                            {Number(
-                                product.price
-                            ).toFixed(2)}{" "}
+                            {price.toFixed(
+                                2
+                            )}{" "}
                             ₺
                         </p>
 
                         <p className="mb-8 text-sm leading-6 text-[#737373]">
-                            {product.description}
+                            {
+                                product.description
+                            }
                         </p>
 
                         <div className="mb-8 grid grid-cols-2 gap-4 border-y border-[#eeeeee] py-6">
-
                             <div>
                                 <p className="mb-1 text-xs text-[#737373]">
                                     Rating
@@ -171,8 +194,11 @@ export default function Product() {
                                 <p className="font-bold">
                                     ⭐{" "}
                                     {Number(
-                                        product.rating
-                                    ).toFixed(1)}
+                                        product.rating ??
+                                        0
+                                    ).toFixed(
+                                        1
+                                    )}
                                 </p>
                             </div>
 
@@ -182,7 +208,9 @@ export default function Product() {
                                 </p>
 
                                 <p className="font-bold">
-                                    {product.stock}
+                                    {
+                                        product.stock
+                                    }
                                 </p>
                             </div>
 
@@ -192,7 +220,9 @@ export default function Product() {
                                 </p>
 
                                 <p className="font-bold">
-                                    {product.sell_count}
+                                    {
+                                        product.sell_count
+                                    }
                                 </p>
                             </div>
 
@@ -202,26 +232,39 @@ export default function Product() {
                                 </p>
 
                                 <p className="font-bold">
-                                    {product.category_id}
+                                    {
+                                        product.category_id
+                                    }
                                 </p>
                             </div>
-
                         </div>
 
-                        {/* ACTIONS */}
                         <div className="flex gap-3">
-
                             <button
                                 type="button"
                                 onClick={
                                     handleAddToCart
                                 }
-                                className="flex flex-1 items-center justify-center gap-2 bg-[#23a6f0] px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0]"
+                                disabled={
+                                    Number(
+                                        product.stock ??
+                                        0
+                                    ) <= 0
+                                }
+                                className="flex flex-1 items-center justify-center gap-2 bg-[#23a6f0] px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <ShoppingCart
-                                    size={18}
+                                    size={
+                                        18
+                                    }
                                 />
-                                ADD TO CART
+
+                                {Number(
+                                    product.stock ??
+                                    0
+                                ) <= 0
+                                    ? "OUT OF STOCK"
+                                    : "ADD TO CART"}
                             </button>
 
                             <button
@@ -240,7 +283,9 @@ export default function Product() {
                                     }`}
                             >
                                 <Heart
-                                    size={21}
+                                    size={
+                                        21
+                                    }
                                     fill={
                                         isFavorite
                                             ? "currentColor"
@@ -248,12 +293,10 @@ export default function Product() {
                                     }
                                 />
                             </button>
-
                         </div>
-
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }

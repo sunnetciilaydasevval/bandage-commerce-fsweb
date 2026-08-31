@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -139,10 +139,26 @@ function getProductDetail(product) {
 
 function getProductPrice(product) {
     return Number(
-        product?.price ??
         product?.discountedPrice ??
+        product?.price ??
         0
     );
+}
+
+function maskCardNumber(cardNumber) {
+    const value = String(
+        cardNumber || ""
+    ).replace(/\s+/g, "");
+
+    if (!value) {
+        return "**** **** **** ****";
+    }
+
+    if (value.length <= 4) {
+        return `**** ${value}`;
+    }
+
+    return `**** **** **** ${value.slice(-4)}`;
 }
 
 function CreateOrder() {
@@ -168,19 +184,25 @@ function CreateOrder() {
         );
 
     const [step, setStep] = useState(1);
+
     const [showForm, setShowForm] =
         useState(false);
+
     const [editingAddress, setEditingAddress] =
         useState(null);
+
     const [shippingAddress, setShippingAddress] =
         useState(null);
+
     const [receiptAddress, setReceiptAddress] =
         useState(null);
 
     const [showCardForm, setShowCardForm] =
         useState(false);
+
     const [editingCard, setEditingCard] =
         useState(null);
+
     const [selectedCard, setSelectedCard] =
         useState(null);
 
@@ -227,6 +249,31 @@ function CreateOrder() {
         dispatch(fetchCards());
     }, [dispatch]);
 
+    const selectedItems = useMemo(
+        () =>
+            cart.filter(
+                (item) =>
+                    item.checked !== false
+            ),
+        [cart]
+    );
+
+    const orderPrice = useMemo(
+        () =>
+            selectedItems.reduce(
+                (total, item) =>
+                    total +
+                    getProductPrice(
+                        item.product
+                    ) *
+                    Number(
+                        item.count || 0
+                    ),
+                0
+            ),
+        [selectedItems]
+    );
+
     const openAddAddress = () => {
         setEditingAddress(null);
         reset(emptyAddress);
@@ -239,10 +286,12 @@ function CreateOrder() {
         reset({
             title: address.title || "",
             name: address.name || "",
-            surname: address.surname || "",
+            surname:
+                address.surname || "",
             phone: address.phone || "",
             city: address.city || "",
-            district: address.district || "",
+            district:
+                address.district || "",
             neighborhood:
                 address.neighborhood || "",
         });
@@ -277,6 +326,10 @@ function CreateOrder() {
                 "Address save failed:",
                 error
             );
+
+            alert(
+                "Address could not be saved."
+            );
         }
     };
 
@@ -305,6 +358,10 @@ function CreateOrder() {
             console.error(
                 "Address delete failed:",
                 error
+            );
+
+            alert(
+                "Address could not be deleted."
             );
         }
     };
@@ -352,15 +409,20 @@ function CreateOrder() {
     const onCardSubmit = async (data) => {
         try {
             const cardData = {
-                card_no: data.card_no,
+                card_no: String(
+                    data.card_no || ""
+                ).replace(/\s+/g, ""),
+
                 expire_month: Number(
                     data.expire_month
                 ),
+
                 expire_year: Number(
                     data.expire_year
                 ),
+
                 name_on_card:
-                    data.name_on_card,
+                    data.name_on_card.trim(),
             };
 
             if (editingCard) {
@@ -382,6 +444,10 @@ function CreateOrder() {
                 "Card save failed:",
                 error
             );
+
+            alert(
+                "Card could not be saved."
+            );
         }
     };
 
@@ -398,11 +464,18 @@ function CreateOrder() {
                 cardId
             ) {
                 setSelectedCard(null);
+                resetPayment(
+                    emptyPayment
+                );
             }
         } catch (error) {
             console.error(
                 "Card delete failed:",
                 error
+            );
+
+            alert(
+                "Card could not be deleted."
             );
         }
     };
@@ -412,16 +485,6 @@ function CreateOrder() {
         resetPayment(emptyPayment);
     };
 
-    const totalPrice = cart.reduce(
-        (total, item) =>
-            total +
-            getProductPrice(
-                item.product
-            ) *
-            Number(item.count || 0),
-        0
-    );
-
     const handleCreateOrder = async (
         paymentData
     ) => {
@@ -429,6 +492,15 @@ function CreateOrder() {
             alert(
                 "Please select a shipping address."
             );
+            setStep(1);
+            return;
+        }
+
+        if (!receiptAddress) {
+            alert(
+                "Please select a receipt address."
+            );
+            setStep(1);
             return;
         }
 
@@ -439,9 +511,17 @@ function CreateOrder() {
             return;
         }
 
-        if (cart.length === 0) {
+        if (selectedItems.length === 0) {
             alert(
-                "Your shopping cart is empty."
+                "Please select at least one product."
+            );
+            navigate("/cart");
+            return;
+        }
+
+        if (orderPrice <= 0) {
+            alert(
+                "Order total must be greater than zero."
             );
             return;
         }
@@ -449,64 +529,73 @@ function CreateOrder() {
         setIsOrdering(true);
 
         try {
-            const products = cart
-                .filter(
-                    (item) =>
-                        item.checked !== false
-                )
-                .map((item) => ({
-                    product_id:
-                        item.product.id,
-                    count: Number(
-                        item.count || 0
-                    ),
-                    detail:
-                        getProductDetail(
-                            item.product
-                        ),
-                }));
+            const products =
+                selectedItems.map(
+                    (item) => ({
+                        product_id:
+                            item.product.id,
 
-            const orderPrice = cart
-                .filter(
-                    (item) =>
-                        item.checked !== false
-                )
-                .reduce(
-                    (total, item) =>
-                        total +
-                        getProductPrice(
-                            item.product
-                        ) *
-                        Number(
+                        count: Number(
                             item.count || 0
                         ),
-                    0
+
+                        detail:
+                            getProductDetail(
+                                item.product
+                            ),
+                    })
                 );
 
             const orderData = {
                 address_id:
                     shippingAddress.id,
+
                 order_date:
                     new Date().toISOString(),
-                card_no: Number(
+
+                card_no: String(
                     selectedCard.card_no
-                ),
+                ).replace(/\s+/g, ""),
+
                 card_name:
                     selectedCard.name_on_card,
+
                 card_expire_month:
                     Number(
                         selectedCard.expire_month
                     ),
+
                 card_expire_year:
                     Number(
                         selectedCard.expire_year
                     ),
+
                 card_ccv: Number(
                     paymentData.card_ccv
                 ),
+
                 price: orderPrice,
+
                 products,
             };
+
+            /*
+             * IMPORTANT:
+             *
+             * receiptAddress seçiliyor ancak mevcut
+             * order API sözleşmesinde hangi field ile
+             * gönderileceği bilinmiyor.
+             *
+             * Backend örneğin:
+             *
+             * receipt_address_id
+             *
+             * veya
+             *
+             * invoice_address_id
+             *
+             * bekliyorsa burada ilgili alan eklenmelidir.
+             */
 
             await dispatch(
                 createOrder(orderData)
@@ -517,7 +606,11 @@ function CreateOrder() {
             setShippingAddress(null);
             setReceiptAddress(null);
             setSelectedCard(null);
-            resetPayment(emptyPayment);
+
+            resetPayment(
+                emptyPayment
+            );
+
             setStep(1);
 
             alert(
@@ -542,7 +635,6 @@ function CreateOrder() {
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
-
                 <h1 className="mb-10 text-3xl font-bold">
                     Create Order
                 </h1>
@@ -573,7 +665,7 @@ function CreateOrder() {
                         className={`px-6 py-3 font-bold ${step === 2
                                 ? "bg-[#252b42] text-white"
                                 : "border"
-                            }`}
+                            } disabled:opacity-50`}
                     >
                         Order
                     </button>
@@ -611,7 +703,6 @@ function CreateOrder() {
                                 </h3>
 
                                 <div className="grid gap-5 md:grid-cols-2">
-
                                     <div>
                                         <label
                                             htmlFor="title"
@@ -764,7 +855,9 @@ function CreateOrder() {
                                             </option>
 
                                             {cities.map(
-                                                (city) => (
+                                                (
+                                                    city
+                                                ) => (
                                                     <option
                                                         key={
                                                             city
@@ -861,7 +954,7 @@ function CreateOrder() {
                                         disabled={
                                             isSubmitting
                                         }
-                                        className="bg-[#23856d] px-5 py-3 font-bold text-white"
+                                        className="bg-[#23856d] px-5 py-3 font-bold text-white disabled:opacity-50"
                                     >
                                         {isSubmitting
                                             ? "Saving..."
@@ -884,103 +977,111 @@ function CreateOrder() {
                         )}
 
                         <div className="grid gap-6 md:grid-cols-2">
-
                             <div>
                                 <h3 className="mb-4 text-xl font-bold">
                                     Shipping Address
                                 </h3>
 
-                                {addressList.map(
-                                    (address) => (
-                                        <div
-                                            key={
-                                                address.id
-                                            }
-                                            className={`mb-4 border p-5 ${shippingAddress?.id ===
+                                {addressList.length ===
+                                    0 ? (
+                                    <p className="text-[#737373]">
+                                        No addresses
+                                        available.
+                                    </p>
+                                ) : (
+                                    addressList.map(
+                                        (
+                                            address
+                                        ) => (
+                                            <div
+                                                key={
                                                     address.id
-                                                    ? "border-[#23a6f0]"
-                                                    : ""
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
+                                                }
+                                                className={`mb-4 border p-5 ${shippingAddress?.id ===
+                                                        address.id
+                                                        ? "border-[#23a6f0]"
+                                                        : ""
+                                                    }`}
+                                            >
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <h4 className="font-bold">
+                                                            {
+                                                                address.title
+                                                            }
+                                                        </h4>
 
-                                                <div>
-                                                    <h4 className="font-bold">
-                                                        {
-                                                            address.title
-                                                        }
-                                                    </h4>
+                                                        <p>
+                                                            {
+                                                                address.name
+                                                            }{" "}
+                                                            {
+                                                                address.surname
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.name
-                                                        }{" "}
-                                                        {
-                                                            address.surname
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.phone
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.phone
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.city
+                                                            }{" "}
+                                                            {
+                                                                address.district
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.city
-                                                        }{" "}
-                                                        {
-                                                            address.district
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.neighborhood
+                                                            }
+                                                        </p>
+                                                    </div>
 
-                                                    <p>
-                                                        {
-                                                            address.neighborhood
-                                                        }
-                                                    </p>
-                                                </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                selectShippingAddress(
+                                                                    address
+                                                                )
+                                                            }
+                                                            className="border px-3 py-2 text-sm font-bold"
+                                                        >
+                                                            Select
+                                                        </button>
 
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            selectShippingAddress(
-                                                                address
-                                                            )
-                                                        }
-                                                        className="border px-3 py-2 text-sm font-bold"
-                                                    >
-                                                        Select
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openEditAddress(
+                                                                    address
+                                                                )
+                                                            }
+                                                            className="border px-3 py-2 text-sm font-bold"
+                                                        >
+                                                            Edit
+                                                        </button>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openEditAddress(
-                                                                address
-                                                            )
-                                                        }
-                                                        className="border px-3 py-2 text-sm font-bold"
-                                                    >
-                                                        Edit
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                address.id
-                                                            )
-                                                        }
-                                                        className="px-3 py-2 text-sm font-bold text-red-500"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    address.id
+                                                                )
+                                                            }
+                                                            className="px-3 py-2 text-sm font-bold text-red-500"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
                                     )
                                 )}
                             </div>
@@ -990,72 +1091,80 @@ function CreateOrder() {
                                     Receipt Address
                                 </h3>
 
-                                {addressList.map(
-                                    (address) => (
-                                        <div
-                                            key={
-                                                address.id
-                                            }
-                                            className={`mb-4 border p-5 ${receiptAddress?.id ===
+                                {addressList.length ===
+                                    0 ? (
+                                    <p className="text-[#737373]">
+                                        No addresses
+                                        available.
+                                    </p>
+                                ) : (
+                                    addressList.map(
+                                        (
+                                            address
+                                        ) => (
+                                            <div
+                                                key={
                                                     address.id
-                                                    ? "border-[#23a6f0]"
-                                                    : ""
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
+                                                }
+                                                className={`mb-4 border p-5 ${receiptAddress?.id ===
+                                                        address.id
+                                                        ? "border-[#23a6f0]"
+                                                        : ""
+                                                    }`}
+                                            >
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <h4 className="font-bold">
+                                                            {
+                                                                address.title
+                                                            }
+                                                        </h4>
 
-                                                <div>
-                                                    <h4 className="font-bold">
-                                                        {
-                                                            address.title
-                                                        }
-                                                    </h4>
+                                                        <p>
+                                                            {
+                                                                address.name
+                                                            }{" "}
+                                                            {
+                                                                address.surname
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.name
-                                                        }{" "}
-                                                        {
-                                                            address.surname
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.phone
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.phone
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.city
+                                                            }{" "}
+                                                            {
+                                                                address.district
+                                                            }
+                                                        </p>
 
-                                                    <p>
-                                                        {
-                                                            address.city
-                                                        }{" "}
-                                                        {
-                                                            address.district
-                                                        }
-                                                    </p>
+                                                        <p>
+                                                            {
+                                                                address.neighborhood
+                                                            }
+                                                        </p>
+                                                    </div>
 
-                                                    <p>
-                                                        {
-                                                            address.neighborhood
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            selectReceiptAddress(
+                                                                address
+                                                            )
                                                         }
-                                                    </p>
+                                                        className="border px-3 py-2 text-sm font-bold"
+                                                    >
+                                                        Select
+                                                    </button>
                                                 </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        selectReceiptAddress(
-                                                            address
-                                                        )
-                                                    }
-                                                    className="border px-3 py-2 text-sm font-bold"
-                                                >
-                                                    Select
-                                                </button>
-
                                             </div>
-                                        </div>
+                                        )
                                     )
                                 )}
                             </div>
@@ -1081,13 +1190,11 @@ function CreateOrder() {
 
                 {step === 2 && (
                     <section>
-
                         <h2 className="mb-6 text-2xl font-bold">
                             Order
                         </h2>
 
                         <div className="mb-6 grid gap-6 md:grid-cols-2">
-
                             <div className="border p-5">
                                 <h3 className="mb-4 font-bold">
                                     Shipping Address
@@ -1171,12 +1278,10 @@ function CreateOrder() {
                                     }
                                 </p>
                             </div>
-
                         </div>
 
                         <div className="mb-6 border p-6">
-
-                            <div className="mb-6 flex items-center justify-between">
+                            <div className="mb-6 flex items-center justify-between gap-4">
                                 <h3 className="text-xl font-bold">
                                     Payment Methods
                                 </h3>
@@ -1206,7 +1311,6 @@ function CreateOrder() {
                                     </h4>
 
                                     <div className="grid gap-5 md:grid-cols-2">
-
                                         <div className="md:col-span-2">
                                             <label
                                                 htmlFor="card_no"
@@ -1218,11 +1322,20 @@ function CreateOrder() {
                                             <input
                                                 id="card_no"
                                                 type="text"
+                                                inputMode="numeric"
+                                                autoComplete="cc-number"
                                                 {...registerCard(
                                                     "card_no",
                                                     {
                                                         required:
                                                             "Card number is required",
+
+                                                        pattern:
+                                                        {
+                                                            value: /^[0-9\s]{13,23}$/,
+                                                            message:
+                                                                "Enter a valid card number",
+                                                        },
                                                     }
                                                 )}
                                                 className="w-full border p-3"
@@ -1250,11 +1363,25 @@ function CreateOrder() {
                                             <input
                                                 id="expire_month"
                                                 type="number"
+                                                min="1"
+                                                max="12"
                                                 {...registerCard(
                                                     "expire_month",
                                                     {
                                                         required:
                                                             "Expire month is required",
+
+                                                        min: {
+                                                            value: 1,
+                                                            message:
+                                                                "Month must be between 1 and 12",
+                                                        },
+
+                                                        max: {
+                                                            value: 12,
+                                                            message:
+                                                                "Month must be between 1 and 12",
+                                                        },
                                                     }
                                                 )}
                                                 className="w-full border p-3"
@@ -1282,6 +1409,8 @@ function CreateOrder() {
                                             <input
                                                 id="expire_year"
                                                 type="number"
+                                                min="2026"
+                                                max="2100"
                                                 {...registerCard(
                                                     "expire_year",
                                                     {
@@ -1314,6 +1443,7 @@ function CreateOrder() {
                                             <input
                                                 id="name_on_card"
                                                 type="text"
+                                                autoComplete="cc-name"
                                                 {...registerCard(
                                                     "name_on_card",
                                                     {
@@ -1334,17 +1464,15 @@ function CreateOrder() {
                                                 </p>
                                             )}
                                         </div>
-
                                     </div>
 
                                     <div className="mt-6 flex gap-3">
-
                                         <button
                                             type="submit"
                                             disabled={
                                                 isCardSubmitting
                                             }
-                                            className="bg-[#23856d] px-5 py-3 font-bold text-white"
+                                            className="bg-[#23856d] px-5 py-3 font-bold text-white disabled:opacity-50"
                                         >
                                             {isCardSubmitting
                                                 ? "Saving..."
@@ -1362,7 +1490,6 @@ function CreateOrder() {
                                         >
                                             Cancel
                                         </button>
-
                                     </div>
                                 </form>
                             )}
@@ -1371,15 +1498,17 @@ function CreateOrder() {
                                 Saved Cards
                             </h4>
 
-                            {creditCards.length === 0 ? (
+                            {creditCards.length ===
+                                0 ? (
                                 <p>
                                     No saved cards.
                                 </p>
                             ) : (
                                 <div className="grid gap-4">
-
                                     {creditCards.map(
-                                        (card) => (
+                                        (
+                                            card
+                                        ) => (
                                             <div
                                                 key={
                                                     card.id
@@ -1390,9 +1519,7 @@ function CreateOrder() {
                                                         : ""
                                                     }`}
                                             >
-
                                                 <div className="flex items-start justify-between gap-4">
-
                                                     <div>
                                                         <p className="font-bold">
                                                             {
@@ -1401,9 +1528,9 @@ function CreateOrder() {
                                                         </p>
 
                                                         <p>
-                                                            {
+                                                            {maskCardNumber(
                                                                 card.card_no
-                                                            }
+                                                            )}
                                                         </p>
 
                                                         <p>
@@ -1417,8 +1544,7 @@ function CreateOrder() {
                                                         </p>
                                                     </div>
 
-                                                    <div className="flex gap-2">
-
+                                                    <div className="flex flex-wrap gap-2">
                                                         <button
                                                             type="button"
                                                             onClick={() =>
@@ -1454,15 +1580,11 @@ function CreateOrder() {
                                                         >
                                                             Delete
                                                         </button>
-
                                                     </div>
-
                                                 </div>
-
                                             </div>
                                         )
                                     )}
-
                                 </div>
                             )}
 
@@ -1473,7 +1595,6 @@ function CreateOrder() {
                                     )}
                                     className="mt-6 border p-5"
                                 >
-
                                     <h4 className="mb-4 text-lg font-bold">
                                         Payment Option
                                     </h4>
@@ -1485,9 +1606,9 @@ function CreateOrder() {
                                     </p>
 
                                     <p>
-                                        {
+                                        {maskCardNumber(
                                             selectedCard.card_no
-                                        }
+                                        )}
                                     </p>
 
                                     <p>
@@ -1501,7 +1622,6 @@ function CreateOrder() {
                                     </p>
 
                                     <div className="mt-5 max-w-[300px]">
-
                                         <label
                                             htmlFor="card_ccv"
                                             className="mb-2 block font-bold"
@@ -1513,15 +1633,17 @@ function CreateOrder() {
                                             id="card_ccv"
                                             type="password"
                                             inputMode="numeric"
+                                            autoComplete="cc-csc"
                                             maxLength="4"
                                             {...registerPayment(
                                                 "card_ccv",
                                                 {
                                                     required:
                                                         "CCV is required",
-                                                    pattern: {
-                                                        value:
-                                                            /^[0-9]{3,4}$/,
+
+                                                    pattern:
+                                                    {
+                                                        value: /^[0-9]{3,4}$/,
                                                         message:
                                                             "CCV must contain 3 or 4 digits",
                                                     },
@@ -1539,20 +1661,19 @@ function CreateOrder() {
                                                 }
                                             </p>
                                         )}
-
                                     </div>
 
                                     <div className="mt-6 border-t pt-5">
-
                                         <div className="mb-4 flex justify-between text-lg font-bold">
                                             <span>
                                                 Total
                                             </span>
 
                                             <span>
-                                                ${totalPrice.toFixed(
+                                                {orderPrice.toFixed(
                                                     2
-                                                )}
+                                                )}{" "}
+                                                ₺
                                             </span>
                                         </div>
 
@@ -1567,12 +1688,9 @@ function CreateOrder() {
                                                 ? "Creating Order..."
                                                 : "Complete Order"}
                                         </button>
-
                                     </div>
-
                                 </form>
                             )}
-
                         </div>
 
                         <button
@@ -1584,10 +1702,8 @@ function CreateOrder() {
                         >
                             Back
                         </button>
-
                     </section>
                 )}
-
             </div>
         </main>
     );

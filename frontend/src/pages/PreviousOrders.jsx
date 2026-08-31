@@ -12,8 +12,12 @@ function formatDate(date) {
 
     const parsedDate = new Date(date);
 
-    if (Number.isNaN(parsedDate.getTime())) {
-        return date;
+    if (
+        Number.isNaN(
+            parsedDate.getTime()
+        )
+    ) {
+        return String(date);
     }
 
     return parsedDate.toLocaleString(
@@ -33,7 +37,8 @@ function getOrderDate(order) {
     return (
         order?.order_date ??
         order?.created_at ??
-        order?.createdAt
+        order?.createdAt ??
+        null
     );
 }
 
@@ -47,11 +52,32 @@ function getOrderPrice(order) {
 }
 
 function getProducts(order) {
+    const products =
+        order?.products ??
+        order?.order_products ??
+        order?.items ??
+        [];
+
+    return Array.isArray(products)
+        ? products
+        : [];
+}
+
+function getProductName(product) {
     return (
-        order?.products ||
-        order?.order_products ||
-        order?.items ||
-        []
+        product?.name ||
+        product?.product_name ||
+        product?.product?.name ||
+        `Product #${product?.product_id ?? "-"
+        }`
+    );
+}
+
+function getProductPrice(product) {
+    return Number(
+        product?.price ??
+        product?.product?.price ??
+        0
     );
 }
 
@@ -70,9 +96,17 @@ export default function PreviousOrders() {
     const [loading, setLoading] =
         useState(true);
 
+    const [error, setError] =
+        useState(false);
+
     useEffect(() => {
+        let mounted = true;
+
         const loadOrders = async () => {
             try {
+                setLoading(true);
+                setError(false);
+
                 await dispatch(
                     getOrders()
                 );
@@ -81,15 +115,27 @@ export default function PreviousOrders() {
                     "Previous orders could not be loaded:",
                     error
                 );
+
+                if (mounted) {
+                    setError(true);
+                }
             } finally {
-                setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                }
             }
         };
 
         loadOrders();
+
+        return () => {
+            mounted = false;
+        };
     }, [dispatch]);
 
-    const toggleOrder = (orderId) => {
+    const toggleOrder = (
+        orderId
+    ) => {
         setOpenOrderId(
             (current) =>
                 current === orderId
@@ -98,28 +144,57 @@ export default function PreviousOrders() {
         );
     };
 
+    if (loading) {
+        return (
+            <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
+                <div className="mx-auto max-w-[1050px]">
+                    <h1 className="mb-10 text-3xl font-bold">
+                        Previous Orders
+                    </h1>
+
+                    <p>
+                        Loading orders...
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+    if (error) {
+        return (
+            <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
+                <div className="mx-auto max-w-[1050px]">
+                    <h1 className="mb-10 text-3xl font-bold">
+                        Previous Orders
+                    </h1>
+
+                    <div className="border p-8 text-center">
+                        <p className="font-bold text-red-500">
+                            Orders could not be
+                            loaded.
+                        </p>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
-
             <div className="mx-auto max-w-[1050px]">
-
                 <h1 className="mb-10 text-3xl font-bold">
                     Previous Orders
                 </h1>
 
-                {loading ? (
-                    <p>
-                        Loading orders...
-                    </p>
-                ) : orders.length === 0 ? (
+                {orders.length === 0 ? (
                     <div className="border p-8 text-center">
                         <p className="text-lg font-bold">
-                            You have no previous orders.
+                            You have no previous
+                            orders.
                         </p>
                     </div>
                 ) : (
                     <div className="overflow-hidden border">
-
                         <div className="hidden grid-cols-4 gap-4 bg-[#252b42] px-6 py-4 font-bold text-white md:grid">
                             <span>
                                 Order ID
@@ -139,7 +214,10 @@ export default function PreviousOrders() {
                         </div>
 
                         {orders.map(
-                            (order, index) => {
+                            (
+                                order,
+                                index
+                            ) => {
                                 const orderId =
                                     getOrderId(
                                         order
@@ -155,7 +233,7 @@ export default function PreviousOrders() {
                                         orderId !==
                                             "-"
                                             ? orderId
-                                            : index
+                                            : `index-${index}`
                                     );
 
                                 const isOpen =
@@ -169,7 +247,6 @@ export default function PreviousOrders() {
                                         }
                                         className="border-b last:border-b-0"
                                     >
-
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -177,18 +254,22 @@ export default function PreviousOrders() {
                                                     uniqueId
                                                 )
                                             }
+                                            aria-expanded={
+                                                isOpen
+                                            }
                                             className="w-full px-6 py-5 text-left transition-colors hover:bg-[#f8f8f8]"
                                         >
-
                                             <div className="grid gap-4 md:grid-cols-4">
-
                                                 <div>
                                                     <span className="mb-1 block text-xs font-bold text-[#737373] md:hidden">
                                                         Order ID
                                                     </span>
 
                                                     <span className="font-bold">
-                                                        #{orderId}
+                                                        #
+                                                        {
+                                                            orderId
+                                                        }
                                                     </span>
                                                 </div>
 
@@ -232,27 +313,27 @@ export default function PreviousOrders() {
                                                         )}
                                                     </span>
                                                 </div>
-
                                             </div>
-
                                         </button>
 
                                         {isOpen && (
                                             <div className="bg-[#fafafa] px-6 py-6">
-
                                                 <h3 className="mb-5 text-xl font-bold">
-                                                    Order Details
+                                                    Order
+                                                    Details
                                                 </h3>
 
                                                 {products.length ===
                                                     0 ? (
                                                     <p>
-                                                        No product details available.
+                                                        No
+                                                        product
+                                                        details
+                                                        available.
                                                     </p>
                                                 ) : (
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full border-collapse">
-
                                                             <thead>
                                                                 <tr className="border-b bg-white text-left">
                                                                     <th className="p-3 font-bold">
@@ -287,62 +368,49 @@ export default function PreviousOrders() {
                                                                             }
                                                                             className="border-b bg-white"
                                                                         >
-
                                                                             <td className="p-3">
-                                                                                {product?.name ||
-                                                                                    product?.product_name ||
-                                                                                    product?.product?.name ||
-                                                                                    `Product #${product?.product_id ??
-                                                                                    "-"
-                                                                                    }`}
+                                                                                {getProductName(
+                                                                                    product
+                                                                                )}
                                                                             </td>
 
                                                                             <td className="p-3">
-                                                                                {
-                                                                                    product?.count
-                                                                                }
+                                                                                {Number(
+                                                                                    product?.count ??
+                                                                                    product?.quantity ??
+                                                                                    0
+                                                                                )}
                                                                             </td>
 
                                                                             <td className="p-3">
-                                                                                {
-                                                                                    product?.detail ||
-                                                                                    "-"
-                                                                                }
+                                                                                {product?.detail ||
+                                                                                    "-"}
                                                                             </td>
 
                                                                             <td className="p-3">
                                                                                 $
-                                                                                {Number(
-                                                                                    product?.price ??
-                                                                                    product?.product?.price ??
-                                                                                    0
+                                                                                {getProductPrice(
+                                                                                    product
                                                                                 ).toFixed(
                                                                                     2
                                                                                 )}
                                                                             </td>
-
                                                                         </tr>
                                                                     )
                                                                 )}
                                                             </tbody>
-
                                                         </table>
                                                     </div>
                                                 )}
-
                                             </div>
                                         )}
-
                                     </div>
                                 );
                             }
                         )}
-
                     </div>
                 )}
-
             </div>
-
         </main>
     );
 }
