@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import {
     getAddresses,
@@ -11,7 +12,10 @@ import {
     addCard,
     editCard,
     removeCard,
+    createOrder,
 } from "../redux/thunks/clientThunks";
+
+import { setCart } from "../redux/actions/shoppingCartActions";
 
 const cities = [
     "adana",
@@ -109,20 +113,59 @@ const emptyCard = {
     name_on_card: "",
 };
 
+const emptyPayment = {
+    card_ccv: "",
+};
+
+function getProductDetail(product) {
+    const color =
+        product?.color?.name ||
+        product?.color ||
+        product?.selectedColor ||
+        "";
+
+    const size =
+        product?.size?.name ||
+        product?.size ||
+        product?.selectedSize ||
+        "";
+
+    if (color && size) {
+        return `${color} - ${size}`;
+    }
+
+    return color || size || "";
+}
+
+function getProductPrice(product) {
+    return Number(
+        product?.price ??
+        product?.discountedPrice ??
+        0
+    );
+}
+
 function CreateOrder() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const addressList =
         useSelector(
             (state) =>
-                state.client.addressList
-        ) || [];
+                state.client?.addressList || []
+        );
 
     const creditCards =
         useSelector(
             (state) =>
-                state.client.creditCards
-        ) || [];
+                state.client?.creditCards || []
+        );
+
+    const cart =
+        useSelector(
+            (state) =>
+                state.shoppingCart?.cart || []
+        );
 
     const [step, setStep] = useState(1);
     const [showForm, setShowForm] =
@@ -140,6 +183,9 @@ function CreateOrder() {
         useState(null);
     const [selectedCard, setSelectedCard] =
         useState(null);
+
+    const [isOrdering, setIsOrdering] =
+        useState(false);
 
     const {
         register,
@@ -165,6 +211,17 @@ function CreateOrder() {
         defaultValues: emptyCard,
     });
 
+    const {
+        register: registerPayment,
+        handleSubmit: handlePaymentSubmit,
+        reset: resetPayment,
+        formState: {
+            errors: paymentErrors,
+        },
+    } = useForm({
+        defaultValues: emptyPayment,
+    });
+
     useEffect(() => {
         dispatch(getAddresses());
         dispatch(fetchCards());
@@ -182,12 +239,10 @@ function CreateOrder() {
         reset({
             title: address.title || "",
             name: address.name || "",
-            surname:
-                address.surname || "",
+            surname: address.surname || "",
             phone: address.phone || "",
             city: address.city || "",
-            district:
-                address.district || "",
+            district: address.district || "",
             neighborhood:
                 address.neighborhood || "",
         });
@@ -296,40 +351,28 @@ function CreateOrder() {
 
     const onCardSubmit = async (data) => {
         try {
+            const cardData = {
+                card_no: data.card_no,
+                expire_month: Number(
+                    data.expire_month
+                ),
+                expire_year: Number(
+                    data.expire_year
+                ),
+                name_on_card:
+                    data.name_on_card,
+            };
+
             if (editingCard) {
                 await dispatch(
                     editCard({
                         id: editingCard.id,
-                        card_no:
-                            data.card_no,
-                        expire_month:
-                            Number(
-                                data.expire_month
-                            ),
-                        expire_year:
-                            Number(
-                                data.expire_year
-                            ),
-                        name_on_card:
-                            data.name_on_card,
+                        ...cardData,
                     })
                 );
             } else {
                 await dispatch(
-                    addCard({
-                        card_no:
-                            data.card_no,
-                        expire_month:
-                            Number(
-                                data.expire_month
-                            ),
-                        expire_year:
-                            Number(
-                                data.expire_year
-                            ),
-                        name_on_card:
-                            data.name_on_card,
-                    })
+                    addCard(cardData)
                 );
             }
 
@@ -366,11 +409,140 @@ function CreateOrder() {
 
     const selectCard = (card) => {
         setSelectedCard(card);
+        resetPayment(emptyPayment);
+    };
+
+    const totalPrice = cart.reduce(
+        (total, item) =>
+            total +
+            getProductPrice(
+                item.product
+            ) *
+            Number(item.count || 0),
+        0
+    );
+
+    const handleCreateOrder = async (
+        paymentData
+    ) => {
+        if (!shippingAddress) {
+            alert(
+                "Please select a shipping address."
+            );
+            return;
+        }
+
+        if (!selectedCard) {
+            alert(
+                "Please select a payment card."
+            );
+            return;
+        }
+
+        if (cart.length === 0) {
+            alert(
+                "Your shopping cart is empty."
+            );
+            return;
+        }
+
+        setIsOrdering(true);
+
+        try {
+            const products = cart
+                .filter(
+                    (item) =>
+                        item.checked !== false
+                )
+                .map((item) => ({
+                    product_id:
+                        item.product.id,
+                    count: Number(
+                        item.count || 0
+                    ),
+                    detail:
+                        getProductDetail(
+                            item.product
+                        ),
+                }));
+
+            const orderPrice = cart
+                .filter(
+                    (item) =>
+                        item.checked !== false
+                )
+                .reduce(
+                    (total, item) =>
+                        total +
+                        getProductPrice(
+                            item.product
+                        ) *
+                        Number(
+                            item.count || 0
+                        ),
+                    0
+                );
+
+            const orderData = {
+                address_id:
+                    shippingAddress.id,
+                order_date:
+                    new Date().toISOString(),
+                card_no: Number(
+                    selectedCard.card_no
+                ),
+                card_name:
+                    selectedCard.name_on_card,
+                card_expire_month:
+                    Number(
+                        selectedCard.expire_month
+                    ),
+                card_expire_year:
+                    Number(
+                        selectedCard.expire_year
+                    ),
+                card_ccv: Number(
+                    paymentData.card_ccv
+                ),
+                price: orderPrice,
+                products,
+            };
+
+            await dispatch(
+                createOrder(orderData)
+            );
+
+            dispatch(setCart([]));
+
+            setShippingAddress(null);
+            setReceiptAddress(null);
+            setSelectedCard(null);
+            resetPayment(emptyPayment);
+            setStep(1);
+
+            alert(
+                "Congratulations! Your order has been successfully created."
+            );
+
+            navigate("/");
+        } catch (error) {
+            console.error(
+                "Order creation failed:",
+                error
+            );
+
+            alert(
+                "Order could not be created. Please try again."
+            );
+        } finally {
+            setIsOrdering(false);
+        }
     };
 
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
+
                 <h1 className="mb-10 text-3xl font-bold">
                     Create Order
                 </h1>
@@ -439,13 +611,13 @@ function CreateOrder() {
                                 </h3>
 
                                 <div className="grid gap-5 md:grid-cols-2">
+
                                     <div>
                                         <label
                                             htmlFor="title"
                                             className="mb-2 block font-bold"
                                         >
-                                            Address
-                                            Title
+                                            Address Title
                                         </label>
 
                                         <input
@@ -588,14 +760,11 @@ function CreateOrder() {
                                             className="w-full border p-3"
                                         >
                                             <option value="">
-                                                Select
-                                                city
+                                                Select city
                                             </option>
 
                                             {cities.map(
-                                                (
-                                                    city
-                                                ) => (
+                                                (city) => (
                                                     <option
                                                         key={
                                                             city
@@ -626,8 +795,7 @@ function CreateOrder() {
                                             htmlFor="district"
                                             className="mb-2 block font-bold"
                                         >
-                                            District
-                                            (İlçe)
+                                            District (İlçe)
                                         </label>
 
                                         <input
@@ -659,8 +827,7 @@ function CreateOrder() {
                                             htmlFor="neighborhood"
                                             className="mb-2 block font-bold"
                                         >
-                                            Neighborhood
-                                            (Mahalle)
+                                            Neighborhood (Mahalle)
                                         </label>
 
                                         <textarea
@@ -717,10 +884,10 @@ function CreateOrder() {
                         )}
 
                         <div className="grid gap-6 md:grid-cols-2">
+
                             <div>
                                 <h3 className="mb-4 text-xl font-bold">
-                                    Shipping
-                                    Address
+                                    Shipping Address
                                 </h3>
 
                                 {addressList.map(
@@ -736,6 +903,7 @@ function CreateOrder() {
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between gap-4">
+
                                                 <div>
                                                     <h4 className="font-bold">
                                                         {
@@ -819,8 +987,7 @@ function CreateOrder() {
 
                             <div>
                                 <h3 className="mb-4 text-xl font-bold">
-                                    Receipt
-                                    Address
+                                    Receipt Address
                                 </h3>
 
                                 {addressList.map(
@@ -836,6 +1003,7 @@ function CreateOrder() {
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between gap-4">
+
                                                 <div>
                                                     <h4 className="font-bold">
                                                         {
@@ -885,6 +1053,7 @@ function CreateOrder() {
                                                 >
                                                     Select
                                                 </button>
+
                                             </div>
                                         </div>
                                     )
@@ -912,11 +1081,13 @@ function CreateOrder() {
 
                 {step === 2 && (
                     <section>
+
                         <h2 className="mb-6 text-2xl font-bold">
                             Order
                         </h2>
 
                         <div className="mb-6 grid gap-6 md:grid-cols-2">
+
                             <div className="border p-5">
                                 <h3 className="mb-4 font-bold">
                                     Shipping Address
@@ -1000,9 +1171,11 @@ function CreateOrder() {
                                     }
                                 </p>
                             </div>
+
                         </div>
 
-                        <div className="border p-6">
+                        <div className="mb-6 border p-6">
+
                             <div className="mb-6 flex items-center justify-between">
                                 <h3 className="text-xl font-bold">
                                     Payment Methods
@@ -1033,6 +1206,7 @@ function CreateOrder() {
                                     </h4>
 
                                     <div className="grid gap-5 md:grid-cols-2">
+
                                         <div className="md:col-span-2">
                                             <label
                                                 htmlFor="card_no"
@@ -1160,9 +1334,11 @@ function CreateOrder() {
                                                 </p>
                                             )}
                                         </div>
+
                                     </div>
 
                                     <div className="mt-6 flex gap-3">
+
                                         <button
                                             type="submit"
                                             disabled={
@@ -1186,114 +1362,123 @@ function CreateOrder() {
                                         >
                                             Cancel
                                         </button>
+
                                     </div>
                                 </form>
                             )}
 
-                            <div>
-                                <h4 className="mb-4 text-lg font-bold">
-                                    Saved Cards
-                                </h4>
+                            <h4 className="mb-4 text-lg font-bold">
+                                Saved Cards
+                            </h4>
 
-                                {creditCards.length ===
-                                    0 ? (
-                                    <p>
-                                        No saved
-                                        cards.
-                                    </p>
-                                ) : (
-                                    <div className="grid gap-4">
-                                        {creditCards.map(
-                                            (
-                                                card
-                                            ) => (
-                                                <div
-                                                    key={
+                            {creditCards.length === 0 ? (
+                                <p>
+                                    No saved cards.
+                                </p>
+                            ) : (
+                                <div className="grid gap-4">
+
+                                    {creditCards.map(
+                                        (card) => (
+                                            <div
+                                                key={
+                                                    card.id
+                                                }
+                                                className={`border p-5 ${selectedCard?.id ===
                                                         card.id
-                                                    }
-                                                    className={`border p-5 ${selectedCard?.id ===
-                                                            card.id
-                                                            ? "border-[#23a6f0]"
-                                                            : ""
-                                                        }`}
-                                                >
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div>
-                                                            <p className="font-bold">
-                                                                {
-                                                                    card.name_on_card
-                                                                }
-                                                            </p>
+                                                        ? "border-[#23a6f0]"
+                                                        : ""
+                                                    }`}
+                                            >
 
-                                                            <p>
-                                                                {
-                                                                    card.card_no
-                                                                }
-                                                            </p>
+                                                <div className="flex items-start justify-between gap-4">
 
-                                                            <p>
-                                                                {
-                                                                    card.expire_month
-                                                                }
-                                                                /
-                                                                {
-                                                                    card.expire_year
-                                                                }
-                                                            </p>
-                                                        </div>
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            {
+                                                                card.name_on_card
+                                                            }
+                                                        </p>
 
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    selectCard(
-                                                                        card
-                                                                    )
-                                                                }
-                                                                className="border px-3 py-2 text-sm font-bold"
-                                                            >
-                                                                Select
-                                                            </button>
+                                                        <p>
+                                                            {
+                                                                card.card_no
+                                                            }
+                                                        </p>
 
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    openEditCard(
-                                                                        card
-                                                                    )
-                                                                }
-                                                                className="border px-3 py-2 text-sm font-bold"
-                                                            >
-                                                                Edit
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    handleDeleteCard(
-                                                                        card.id
-                                                                    )
-                                                                }
-                                                                className="px-3 py-2 text-sm font-bold text-red-500"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
+                                                        <p>
+                                                            {
+                                                                card.expire_month
+                                                            }
+                                                            /
+                                                            {
+                                                                card.expire_year
+                                                            }
+                                                        </p>
                                                     </div>
+
+                                                    <div className="flex gap-2">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                selectCard(
+                                                                    card
+                                                                )
+                                                            }
+                                                            className="border px-3 py-2 text-sm font-bold"
+                                                        >
+                                                            Select
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openEditCard(
+                                                                    card
+                                                                )
+                                                            }
+                                                            className="border px-3 py-2 text-sm font-bold"
+                                                        >
+                                                            Edit
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleDeleteCard(
+                                                                    card.id
+                                                                )
+                                                            }
+                                                            className="px-3 py-2 text-sm font-bold text-red-500"
+                                                        >
+                                                            Delete
+                                                        </button>
+
+                                                    </div>
+
                                                 </div>
-                                            )
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+
+                                            </div>
+                                        )
+                                    )}
+
+                                </div>
+                            )}
 
                             {selectedCard && (
-                                <div className="mt-6 border p-5">
-                                    <h4 className="mb-3 font-bold">
+                                <form
+                                    onSubmit={handlePaymentSubmit(
+                                        handleCreateOrder
+                                    )}
+                                    className="mt-6 border p-5"
+                                >
+
+                                    <h4 className="mb-4 text-lg font-bold">
                                         Payment Option
                                     </h4>
 
-                                    <p>
+                                    <p className="font-bold">
                                         {
                                             selectedCard.name_on_card
                                         }
@@ -1314,8 +1499,80 @@ function CreateOrder() {
                                             selectedCard.expire_year
                                         }
                                     </p>
-                                </div>
+
+                                    <div className="mt-5 max-w-[300px]">
+
+                                        <label
+                                            htmlFor="card_ccv"
+                                            className="mb-2 block font-bold"
+                                        >
+                                            CCV
+                                        </label>
+
+                                        <input
+                                            id="card_ccv"
+                                            type="password"
+                                            inputMode="numeric"
+                                            maxLength="4"
+                                            {...registerPayment(
+                                                "card_ccv",
+                                                {
+                                                    required:
+                                                        "CCV is required",
+                                                    pattern: {
+                                                        value:
+                                                            /^[0-9]{3,4}$/,
+                                                        message:
+                                                            "CCV must contain 3 or 4 digits",
+                                                    },
+                                                }
+                                            )}
+                                            className="w-full border p-3"
+                                        />
+
+                                        {paymentErrors.card_ccv && (
+                                            <p className="mt-1 text-red-500">
+                                                {
+                                                    paymentErrors
+                                                        .card_ccv
+                                                        .message
+                                                }
+                                            </p>
+                                        )}
+
+                                    </div>
+
+                                    <div className="mt-6 border-t pt-5">
+
+                                        <div className="mb-4 flex justify-between text-lg font-bold">
+                                            <span>
+                                                Total
+                                            </span>
+
+                                            <span>
+                                                ${totalPrice.toFixed(
+                                                    2
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={
+                                                isOrdering
+                                            }
+                                            className="w-full bg-[#23a6f0] px-6 py-4 font-bold text-white disabled:opacity-50"
+                                        >
+                                            {isOrdering
+                                                ? "Creating Order..."
+                                                : "Complete Order"}
+                                        </button>
+
+                                    </div>
+
+                                </form>
                             )}
+
                         </div>
 
                         <button
@@ -1323,12 +1580,14 @@ function CreateOrder() {
                             onClick={() =>
                                 setStep(1)
                             }
-                            className="mt-6 border px-6 py-3 font-bold"
+                            className="border px-6 py-3 font-bold"
                         >
                             Back
                         </button>
+
                     </section>
                 )}
+
             </div>
         </main>
     );

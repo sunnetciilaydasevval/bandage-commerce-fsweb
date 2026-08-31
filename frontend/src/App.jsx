@@ -23,13 +23,17 @@ import AboutUs from "./pages/AboutUs";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import CreateOrder from "./pages/CreateOrder";
+import PreviousOrders from "./pages/PreviousOrders";
 
 import {
   fetchCategories,
 } from "./redux/thunks/categoryThunk";
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({
+  children,
+}) {
   const location = useLocation();
+
   const token =
     localStorage.getItem("token");
 
@@ -59,6 +63,7 @@ export default function App() {
     <Router>
       <PageContent>
         <Routes>
+
           <Route
             path="/"
             element={<Home />}
@@ -126,6 +131,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/previous-orders"
+            element={
+              <ProtectedRoute>
+                <PreviousOrders />
+              </ProtectedRoute>
+            }
+          />
+
         </Routes>
       </PageContent>
     </Router>

@@ -212,3 +212,49 @@ export const removeCard = (
         }
     };
 };
+
+export const createOrder = (
+    orderData
+) => {
+    return async () => {
+        try {
+            const response =
+                await api.post(
+                    "/order",
+                    orderData
+                );
+
+            return response.data;
+        } catch (error) {
+            console.error(
+                "Failed to create order:",
+                error
+            );
+
+            throw error;
+        }
+    };
+};
+
+export const getOrders = () => {
+    return async (dispatch) => {
+        try {
+            const response =
+                await api.get("/order");
+
+            dispatch({
+                type: "CLIENT_SET_ORDERS",
+                payload: response.data,
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error(
+                "Failed to fetch orders:",
+                error
+            );
+
+            throw error;
+        }
+    };
+};

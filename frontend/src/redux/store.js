@@ -6,6 +6,7 @@ import {
 
 import { thunk } from "redux-thunk";
 
+import orderReducer from "./reducers/orderReducer";
 import clientReducer from "./reducers/clientReducer";
 import productReducer from "./reducers/productReducer";
 import shoppingCartReducer from "./reducers/shoppingCartReducer";
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     shoppingCart: shoppingCartReducer,
     favorite: favoriteReducer,
     client: clientReducer,
+    order: orderReducer,
 });
 
 const store = createStore(

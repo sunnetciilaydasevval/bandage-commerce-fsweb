@@ -58,6 +58,9 @@ export default function Header() {
     const [mobileCategoryOpen, setMobileCategoryOpen] =
         useState(false);
 
+    const [isUserMenuOpen, setIsUserMenuOpen] =
+        useState(false);
+
     const categories = useSelector(
         (state) =>
             state.product?.categories || []
@@ -72,6 +75,20 @@ export default function Header() {
         (state) =>
             state.favorite?.favorites || []
     );
+
+    const user = useSelector(
+        (state) =>
+            state.client?.user || {}
+    );
+
+    const isLoggedIn =
+        Boolean(localStorage.getItem("token"));
+
+    const userName =
+        user?.name ||
+        user?.username ||
+        user?.email ||
+        "Account";
 
     const cartCount = cart.reduce(
         (total, item) =>
@@ -196,14 +213,10 @@ export default function Header() {
                     <div
                         className="relative"
                         onMouseEnter={() =>
-                            setIsCategoryOpen(
-                                true
-                            )
+                            setIsCategoryOpen(true)
                         }
                         onMouseLeave={() =>
-                            setIsCategoryOpen(
-                                false
-                            )
+                            setIsCategoryOpen(false)
                         }
                     >
 
@@ -233,7 +246,6 @@ export default function Header() {
 
                                 <div className="grid grid-cols-2 gap-8 rounded-md border border-[#eeeeee] bg-white p-6 shadow-lg">
 
-                                    {/* WOMEN */}
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
@@ -243,9 +255,7 @@ export default function Header() {
                                         <div className="flex flex-col gap-3">
 
                                             {womenCategories.map(
-                                                (
-                                                    category
-                                                ) => (
+                                                (category) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -271,7 +281,6 @@ export default function Header() {
 
                                     </div>
 
-                                    {/* MEN */}
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
@@ -281,9 +290,7 @@ export default function Header() {
                                         <div className="flex flex-col gap-3">
 
                                             {menCategories.map(
-                                                (
-                                                    category
-                                                ) => (
+                                                (category) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -321,13 +328,71 @@ export default function Header() {
                 {/* DESKTOP ACTIONS */}
                 <div className="hidden items-center gap-1 lg:flex">
 
-                    <Link
-                        to="/signup"
-                        className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
-                    >
-                        <UserRound size={16} />
-                        Login / Register
-                    </Link>
+                    {isLoggedIn ? (
+                        <div className="relative">
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsUserMenuOpen(
+                                        (current) =>
+                                            !current
+                                    )
+                                }
+                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                            >
+                                <UserRound size={16} />
+
+                                <span>
+                                    {userName}
+                                </span>
+
+                                <ChevronDown
+                                    size={15}
+                                    className={`transition-transform ${isUserMenuOpen
+                                            ? "rotate-180"
+                                            : ""
+                                        }`}
+                                />
+                            </button>
+
+                            {isUserMenuOpen && (
+                                <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md border border-[#eeeeee] bg-white py-2 shadow-lg">
+
+                                    <Link
+                                        to="/previous-orders"
+                                        onClick={() =>
+                                            setIsUserMenuOpen(
+                                                false
+                                            )
+                                        }
+                                        className="block px-4 py-3 text-sm font-bold text-[#737373] hover:bg-[#f5f5f5] hover:text-[#23a6f0]"
+                                    >
+                                        Previous Orders
+                                    </Link>
+
+                                </div>
+                            )}
+
+                        </div>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                            >
+                                <UserRound size={16} />
+                                Login
+                            </Link>
+
+                            <Link
+                                to="/signup"
+                                className="rounded-full p-3 text-[14px] font-bold text-[#23a6f0] hover:bg-[#f5f5f5]"
+                            >
+                                Register
+                            </Link>
+                        </>
+                    )}
 
                     <button
                         type="button"
@@ -383,7 +448,6 @@ export default function Header() {
                         <Search size={22} />
                     </button>
 
-                    {/* MOBILE CART */}
                     <Link
                         to="/cart"
                         aria-label="Shopping cart"
@@ -398,7 +462,6 @@ export default function Header() {
                         )}
                     </Link>
 
-                    {/* MOBILE FAVORITES */}
                     <Link
                         to="/favorites"
                         aria-label="Favorites"
@@ -413,7 +476,6 @@ export default function Header() {
                         )}
                     </Link>
 
-                    {/* MOBILE MENU */}
                     <button
                         type="button"
                         aria-label={
@@ -448,6 +510,48 @@ export default function Header() {
                 <div className="border-t border-[#eeeeee] px-4 pb-10 pt-5 lg:hidden">
 
                     <div className="flex flex-col items-center gap-6 text-center">
+
+                        {!isLoggedIn && (
+                            <div className="flex items-center gap-4">
+
+                                <Link
+                                    to="/login"
+                                    onClick={
+                                        closeMobileMenu
+                                    }
+                                    className="text-[24px] leading-8 text-[#23a6f0]"
+                                >
+                                    Login
+                                </Link>
+
+                                <span className="text-[#d9d9d9]">
+                                    /
+                                </span>
+
+                                <Link
+                                    to="/signup"
+                                    onClick={
+                                        closeMobileMenu
+                                    }
+                                    className="text-[24px] leading-8 text-[#23a6f0]"
+                                >
+                                    Register
+                                </Link>
+
+                            </div>
+                        )}
+
+                        {isLoggedIn && (
+                            <Link
+                                to="/previous-orders"
+                                onClick={
+                                    closeMobileMenu
+                                }
+                                className="text-[24px] leading-8 text-[#23a6f0]"
+                            >
+                                Previous Orders
+                            </Link>
+                        )}
 
                         {navItems.map(
                             ([label, href]) => (
@@ -491,7 +595,6 @@ export default function Header() {
                             {mobileCategoryOpen && (
                                 <div className="mt-6 grid grid-cols-2 gap-8 text-left">
 
-                                    {/* WOMEN */}
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
@@ -501,9 +604,7 @@ export default function Header() {
                                         <div className="flex flex-col gap-3">
 
                                             {womenCategories.map(
-                                                (
-                                                    category
-                                                ) => (
+                                                (category) => (
                                                     <Link
                                                         key={
                                                             category.id
@@ -527,7 +628,6 @@ export default function Header() {
 
                                     </div>
 
-                                    {/* MEN */}
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
@@ -537,9 +637,7 @@ export default function Header() {
                                         <div className="flex flex-col gap-3">
 
                                             {menCategories.map(
-                                                (
-                                                    category
-                                                ) => (
+                                                (category) => (
                                                     <Link
                                                         key={
                                                             category.id
