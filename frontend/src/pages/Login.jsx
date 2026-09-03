@@ -1,15 +1,11 @@
-import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
-import { login } from "../api/auth";
-import { setUser } from "../redux/actions/clientActions";
+import { loginUser } from "../redux/thunks/clientThunks";
 
 function Login() {
-    const [submitError, setSubmitError] =
-        useState("");
-
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -25,38 +21,33 @@ function Login() {
         defaultValues: {
             email: "",
             password: "",
+            rememberMe: false,
         },
     });
 
     const onSubmit = async (data) => {
-        setSubmitError("");
-
         try {
-            const response = await login(data);
-            const responseData = response.data;
-
-            const token =
-                responseData.token ||
-                responseData.accessToken ||
-                responseData.access;
-
-            if (!token) {
-                throw new Error(
-                    "Login response does not contain a token."
-                );
-            }
-
-            localStorage.setItem(
-                "token",
-                token
+            await dispatch(
+                loginUser(
+                    {
+                        email: data.email,
+                        password: data.password,
+                    },
+                    data.rememberMe
+                )
             );
 
-            if (responseData.user) {
-                dispatch(
-                    setUser(responseData.user)
-                );
-            }
+            toast.success(
+                "Login successful!"
+            );
 
+            /*
+             * ProtectedRoute tarafından login'e gönderilen
+             * önceki sayfayı kullanıyoruz.
+             *
+             * pathname + search birlikte tutulduğu için
+             * query parametreleri de kaybolmaz.
+             */
             const from =
                 location.state?.from || "/";
 
@@ -73,9 +64,9 @@ function Login() {
                 error.response?.data?.message ||
                 error.response?.data?.error ||
                 error.message ||
-                "Login failed. Please try again.";
+                "Login failed. Please check your email and password.";
 
-            setSubmitError(message);
+            toast.error(message);
         }
     };
 
@@ -109,19 +100,11 @@ function Login() {
                     {/* FORM CARD */}
                     <div className="rounded-md border border-[#eeeeee] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06)] md:p-10">
 
-                        {submitError && (
-                            <div
-                                role="alert"
-                                className="mb-6 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm leading-5 text-[#b00020]"
-                            >
-                                {submitError}
-                            </div>
-                        )}
-
                         <form
                             onSubmit={handleSubmit(onSubmit)}
                             className="flex flex-col gap-5"
                         >
+
                             {/* EMAIL */}
                             <div>
                                 <label
@@ -185,35 +168,39 @@ function Login() {
 
                                 {errors.password && (
                                     <p className="mt-2 text-xs text-[#e74040]">
-                                        {
-                                            errors.password
-                                                .message
-                                        }
+                                        {errors.password.message}
                                     </p>
                                 )}
                             </div>
 
                             {/* OPTIONS */}
                             <div className="flex items-center justify-between text-xs">
+
                                 <label className="flex cursor-pointer items-center gap-2 text-[#737373]">
                                     <input
                                         type="checkbox"
+                                        disabled={isSubmitting}
+                                        {...register(
+                                            "rememberMe"
+                                        )}
                                         className="h-4 w-4 accent-[#23a6f0]"
                                     />
+
                                     Remember me
                                 </label>
 
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        console.log(
-                                            "Forgot password clicked"
+                                        toast.info(
+                                            "Forgot password is not available yet."
                                         )
                                     }
                                     className="font-bold text-[#23a6f0] hover:underline"
                                 >
                                     Forgot password?
                                 </button>
+
                             </div>
 
                             {/* SUBMIT */}
@@ -226,11 +213,13 @@ function Login() {
                                     ? "Logging in..."
                                     : "Login"}
                             </button>
+
                         </form>
 
                         {/* SIGNUP */}
                         <p className="mt-6 text-center text-sm text-[#737373]">
                             Don't have an account?{" "}
+
                             <Link
                                 to="/signup"
                                 className="font-bold text-[#23a6f0] hover:underline"
@@ -238,6 +227,7 @@ function Login() {
                                 Sign Up
                             </Link>
                         </p>
+
                     </div>
                 </div>
             </div>

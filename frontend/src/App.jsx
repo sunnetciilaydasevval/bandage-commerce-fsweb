@@ -6,11 +6,11 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 import PageContent from "./layout/PageContent";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -29,26 +29,6 @@ import {
   fetchCategories,
 } from "./redux/thunks/categoryThunk";
 
-function ProtectedRoute({ children }) {
-  const location = useLocation();
-
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{
-          from: location.pathname,
-        }}
-      />
-    );
-  }
-
-  return children;
-}
-
 function AppRoutes() {
   const dispatch = useDispatch();
 
@@ -59,6 +39,9 @@ function AppRoutes() {
   return (
     <PageContent>
       <Routes>
+
+        {/* PUBLIC ROUTES */}
+
         <Route
           path="/"
           element={<Home />}
@@ -114,6 +97,8 @@ function AppRoutes() {
           element={<Login />}
         />
 
+        {/* PROTECTED ROUTES */}
+
         <Route
           path="/create-order"
           element={
@@ -132,6 +117,8 @@ function AppRoutes() {
           }
         />
 
+        {/* FALLBACK */}
+
         <Route
           path="*"
           element={
@@ -141,6 +128,7 @@ function AppRoutes() {
             />
           }
         />
+
       </Routes>
     </PageContent>
   );

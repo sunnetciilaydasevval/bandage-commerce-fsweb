@@ -1,10 +1,12 @@
 import {
     setRoles,
     setCreditCards,
+    setUser,
 } from "../actions/clientActions";
 
 import {
     getRoles as fetchRoles,
+    login as loginRequest,
 } from "../../api/auth";
 
 import api from "../../api/axiosInstance";
@@ -17,6 +19,81 @@ import {
 } from "../../api/card";
 
 let rolesRequestStarted = false;
+
+/**
+ * LOGIN
+ *
+ * Login isteğini API'ye gönderir.
+ * Başarılı olursa:
+ * - token'ı rememberMe durumuna göre localStorage/sessionStorage'a kaydeder
+ * - kullanıcı bilgisini client.user içerisine kaydeder
+ * - Login.jsx'e responseData döndürür
+ */
+export const loginUser = (formData, rememberMe = false) => {
+    return async (dispatch) => {
+        try {
+            const response = await loginRequest({
+                email: formData.email,
+                password: formData.password,
+            });
+
+            const responseData = response.data;
+
+            const token =
+                responseData?.token ||
+                responseData?.accessToken ||
+                responseData?.access;
+
+            if (!token) {
+                throw new Error(
+                    "Login response does not contain a token."
+                );
+            }
+
+            // Önce eski token'ları temizle.
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
+
+            // Remember me seçiliyse kalıcı,
+            // seçili değilse sessionStorage kullan.
+            if (rememberMe) {
+                localStorage.setItem("token", token);
+            } else {
+                sessionStorage.setItem("token", token);
+            }
+
+            // API user objesi gönderiyorsa onu kullan.
+            // Bazı response'larda user olmayabileceği için
+            // form email'ini fallback olarak kullanıyoruz.
+            const user =
+                responseData?.user || {
+                    email: formData.email,
+                };
+
+            dispatch(setUser(user));
+
+            return responseData;
+        } catch (error) {
+            console.error(
+                "Login failed:",
+                error
+            );
+
+            throw error;
+        }
+    };
+};
+
+export const logoutUser = () => {
+    return (dispatch) => {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+
+        dispatch(
+            setUser({})
+        );
+    };
+};
 
 export const getRoles = () => {
     return async (dispatch, getState) => {

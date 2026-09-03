@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+import { getGravatarUrl } from "../utils/gravatar";
 
 import {
     Phone,
@@ -88,8 +90,38 @@ export default function Header() {
             state.client?.user || {}
     );
 
+    const [gravatarUrl, setGravatarUrl] =
+        useState("");
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadGravatar = async () => {
+            if (!user?.email) {
+                setGravatarUrl("");
+                return;
+            }
+
+            const url =
+                await getGravatarUrl(user.email);
+
+            if (!cancelled) {
+                setGravatarUrl(url);
+            }
+        };
+
+        loadGravatar();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.email]);
+
     const isLoggedIn =
-        Boolean(localStorage.getItem("token"));
+        Boolean(
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token")
+        );
 
     const userName =
         user?.name ||
@@ -287,8 +319,8 @@ export default function Header() {
                             <ChevronDown
                                 size={15}
                                 className={`transition-transform ${isCategoryOpen
-                                        ? "rotate-180"
-                                        : ""
+                                    ? "rotate-180"
+                                    : ""
                                     }`}
                             />
                         </button>
@@ -388,12 +420,25 @@ export default function Header() {
                                 type="button"
                                 onClick={() =>
                                     setIsUserMenuOpen(
-                                        (current) =>
-                                            !current
+                                        (current) => !current
                                     )
                                 }
-                                className="flex items-center gap-1 rounded-full p-3 text-[14px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                                className="flex items-center gap-2 rounded-full p-2 text-[14px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                             >
+                                {gravatarUrl ? (
+                                    <img
+                                        src={gravatarUrl}
+                                        alt={userName}
+                                        className="h-8 w-8 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#23a6f0] text-xs font-bold text-white">
+                                        {userName
+                                            ?.charAt(0)
+                                            ?.toUpperCase()}
+                                    </div>
+                                )}
+
                                 <span>
                                     {userName}
                                 </span>
@@ -401,8 +446,8 @@ export default function Header() {
                                 <ChevronDown
                                     size={15}
                                     className={`transition-transform ${isUserMenuOpen
-                                            ? "rotate-180"
-                                            : ""
+                                        ? "rotate-180"
+                                        : ""
                                         }`}
                                 />
                             </button>
@@ -699,8 +744,8 @@ export default function Header() {
                                 <ChevronDown
                                     size={20}
                                     className={`transition-transform ${mobileCategoryOpen
-                                            ? "rotate-180"
-                                            : ""
+                                        ? "rotate-180"
+                                        : ""
                                         }`}
                                 />
                             </button>
