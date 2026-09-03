@@ -2,11 +2,13 @@ import {
     setRoles,
     setCreditCards,
     setUser,
+    setAuthChecked,
 } from "../actions/clientActions";
 
 import {
     getRoles as fetchRoles,
     login as loginRequest,
+    verifyToken as verifyTokenRequest,
 } from "../../api/auth";
 
 import api from "../../api/axiosInstance";
@@ -20,24 +22,23 @@ import {
 
 let rolesRequestStarted = false;
 
-/**
+/*
  * LOGIN
- *
- * Login isteğini API'ye gönderir.
- * Başarılı olursa:
- * - token'ı rememberMe durumuna göre localStorage/sessionStorage'a kaydeder
- * - kullanıcı bilgisini client.user içerisine kaydeder
- * - Login.jsx'e responseData döndürür
  */
-export const loginUser = (formData, rememberMe = false) => {
+export const loginUser = (
+    formData,
+    rememberMe = false
+) => {
     return async (dispatch) => {
         try {
-            const response = await loginRequest({
-                email: formData.email,
-                password: formData.password,
-            });
+            const response =
+                await loginRequest({
+                    email: formData.email,
+                    password: formData.password,
+                });
 
-            const responseData = response.data;
+            const responseData =
+                response.data;
 
             const token =
                 responseData?.token ||
@@ -50,51 +51,243 @@ export const loginUser = (formData, rememberMe = false) => {
                 );
             }
 
-            // Önce eski token'ları temizle.
+            /*
+             * Eski tokenları temizle.
+             */
             localStorage.removeItem("token");
             sessionStorage.removeItem("token");
 
-            // Remember me seçiliyse kalıcı,
-            // seçili değilse sessionStorage kullan.
+            /*
+             * Remember Me seçiliyse token
+             * localStorage'a kaydedilir.
+             *
+             * Değilse sessionStorage kullanılır.
+             */
             if (rememberMe) {
-                localStorage.setItem("token", token);
+                localStorage.setItem(
+                    "token",
+                    token
+                );
             } else {
-                sessionStorage.setItem("token", token);
+                sessionStorage.setItem(
+                    "token",
+                    token
+                );
             }
 
-            // API user objesi gönderiyorsa onu kullan.
-            // Bazı response'larda user olmayabileceği için
-            // form email'ini fallback olarak kullanıyoruz.
+            /*
+             * Axios sonraki isteklerde tokenı
+             * otomatik olarak Authorization headerına
+             * ekleyecek.
+             *
+             * Burada özellikle Bearer kullanılmıyor.
+             */
+            api.defaults.headers.common.Authorization =
+                token;
+
+            /*
+             * User bilgisini Redux'a kaydet.
+             */
             const user =
                 responseData?.user || {
                     email: formData.email,
                 };
 
-            dispatch(setUser(user));
+            dispatch(
+                setUser(user)
+            );
+
+            dispatch(
+                setAuthChecked(true)
+            );
 
             return responseData;
         } catch (error) {
-            console.error(
-                "Login failed:",
-                error
-            );
-
             throw error;
         }
     };
 };
 
+/*
+ * VERIFY TOKEN
+ *
+ * Uygulama açıldığında çağrılır.
+ */
+export const verifyToken = () => {
+    return async (dispatch) => {
+        try {
+            /*
+             * Öncelikle localStorage kontrol edilir.
+             * Remember Me ile kaydedilen token burada bulunur.
+             *
+             * sessionStorage da kontrol edilir;
+             * böylece Remember Me seçilmeden giriş yapan
+             * kullanıcı aynı browser session'ında refresh
+             * yaptığında login durumu korunur.
+             */
+            const localToken =
+                localStorage.getItem("token");
+
+            const sessionToken =
+                sessionStorage.getItem("token");
+
+            const token =
+                localToken || sessionToken;
+
+            /*
+             * Hiç token yoksa verify isteği gönderme.
+             */
+            if (!token) {
+                dispatch(
+                    setUser({})
+                );
+
+                dispatch(
+                    setAuthChecked(true)
+                );
+
+                return null;
+            }
+
+            /*
+             * Axios headerını verify isteğinden önce
+             * doğrudan token ile ayarla.
+             *
+             * NOT: Bearer prefix YOK.
+             */
+            api.defaults.headers.common.Authorization =
+                token;
+
+            const response =
+                await verifyTokenRequest();
+
+            const responseData =
+                response.data;
+
+            /*
+             * Verify response'undan user bilgisini al.
+             */
+            const user =
+                responseData?.user ||
+                responseData;
+
+            /*
+             * Backend yeni/yenilenmiş token
+             * döndürebilir.
+             */
+            const renewedToken =
+                responseData?.token ||
+                responseData?.accessToken ||
+                responseData?.access ||
+                token;
+
+            /*
+             * Tokenı yenile.
+             *
+             * Token localStorage'dan geldiyse
+             * localStorage'da tut.
+             *
+             * sessionStorage'dan geldiyse
+             * sessionStorage'da tut.
+             */
+            if (localToken) {
+                localStorage.setItem(
+                    "token",
+                    renewedToken
+                );
+            } else {
+                sessionStorage.setItem(
+                    "token",
+                    renewedToken
+                );
+            }
+
+            /*
+             * Axios headerını da yenile.
+             */
+            api.defaults.headers.common.Authorization =
+                renewedToken;
+
+            /*
+             * User bilgisini Redux'a yaz.
+             */
+            dispatch(
+                setUser(user || {})
+            );
+
+            dispatch(
+                setAuthChecked(true)
+            );
+
+            return user;
+        } catch (error) {
+            console.error(
+                "Token verification failed:",
+                error
+            );
+
+            /*
+             * Token geçersiz.
+             *
+             * Her iki storage'dan da temizliyoruz.
+             */
+            localStorage.removeItem(
+                "token"
+            );
+
+            sessionStorage.removeItem(
+                "token"
+            );
+
+            /*
+             * Axios default Authorization headerını
+             * da temizle.
+             */
+            delete api.defaults.headers.common
+                .Authorization;
+
+            dispatch(
+                setUser({})
+            );
+
+            dispatch(
+                setAuthChecked(true)
+            );
+
+            return null;
+        }
+    };
+};
+
+/*
+ * LOGOUT
+ */
 export const logoutUser = () => {
     return (dispatch) => {
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
+        localStorage.removeItem(
+            "token"
+        );
+
+        sessionStorage.removeItem(
+            "token"
+        );
+
+        delete api.defaults.headers.common
+            .Authorization;
 
         dispatch(
             setUser({})
         );
+
+        dispatch(
+            setAuthChecked(true)
+        );
     };
 };
 
+/*
+ * ROLES
+ */
 export const getRoles = () => {
     return async (dispatch, getState) => {
         const roles =
@@ -131,6 +324,9 @@ export const getRoles = () => {
     };
 };
 
+/*
+ * ADDRESSES
+ */
 export const getAddresses = () => {
     return async (dispatch) => {
         try {
@@ -237,6 +433,9 @@ export const deleteAddress = (
     };
 };
 
+/*
+ * CREDIT CARDS
+ */
 export const fetchCards = () => {
     return async (dispatch) => {
         try {
@@ -340,6 +539,9 @@ export const removeCard = (
     };
 };
 
+/*
+ * ORDERS
+ */
 export const createOrder = (
     orderData
 ) => {

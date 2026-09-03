@@ -1,7 +1,32 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 function ProtectedRoute({ children }) {
     const location = useLocation();
+
+    const authChecked = useSelector(
+        (state) =>
+            state.client?.authChecked
+    );
+
+    const user = useSelector(
+        (state) =>
+            state.client?.user
+    );
+
+    /*
+     * Uygulama açılırken verify tamamlanmadan
+     * redirect yapma.
+     */
+    if (!authChecked) {
+        return (
+            <div className="flex min-h-[50vh] items-center justify-center bg-white">
+                <p className="text-sm font-bold text-[#737373]">
+                    Loading...
+                </p>
+            </div>
+        );
+    }
 
     const localToken =
         localStorage.getItem("token");
@@ -12,7 +37,32 @@ function ProtectedRoute({ children }) {
     const token =
         localToken || sessionToken;
 
+    /*
+     * Token yoksa login'e gönder.
+     */
     if (!token) {
+        const from =
+            `${location.pathname}${location.search}${location.hash}`;
+
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{
+                    from,
+                }}
+            />
+        );
+    }
+
+    /*
+     * Verify başarılı olmasına rağmen user yoksa
+     * güvenlik amacıyla login'e gönder.
+     */
+    if (
+        !user ||
+        Object.keys(user).length === 0
+    ) {
         const from =
             `${location.pathname}${location.search}${location.hash}`;
 

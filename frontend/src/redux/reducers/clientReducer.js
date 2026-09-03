@@ -6,6 +6,7 @@ const initialState = {
     roles: [],
     theme: "",
     language: "",
+    authChecked: false,
 };
 
 const clientReducer = (
@@ -35,6 +36,12 @@ const clientReducer = (
             return {
                 ...state,
                 language: action.payload,
+            };
+
+        case "CLIENT_SET_AUTH_CHECKED":
+            return {
+                ...state,
+                authChecked: action.payload,
             };
 
         case "CLIENT_SET_ADDRESS_LIST":

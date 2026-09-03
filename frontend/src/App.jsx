@@ -7,7 +7,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import {
+  useDispatch,
+  useSelector,
+} from "react-redux";
 
 import PageContent from "./layout/PageContent";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -29,12 +32,51 @@ import {
   fetchCategories,
 } from "./redux/thunks/categoryThunk";
 
+import {
+  verifyToken,
+} from "./redux/thunks/clientThunks";
+
 function AppRoutes() {
   const dispatch = useDispatch();
 
+  const authChecked = useSelector(
+    (state) =>
+      state.client?.authChecked
+  );
+
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(
+      verifyToken()
+    );
+
+    dispatch(
+      fetchCategories()
+    );
   }, [dispatch]);
+
+  /*
+   * Token verification tamamlanmadan
+   * route'ları render etmiyoruz.
+   *
+   * Böylece:
+   *
+   * App açılır
+   *    ↓
+   * /verify
+   *    ↓
+   * user Redux'a
+   *    ↓
+   * Route'lar render edilir
+   */
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white font-['Montserrat',sans-serif]">
+        <p className="text-sm font-bold text-[#737373]">
+          Loading...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <PageContent>

@@ -27,3 +27,8 @@ export const setCreditCards = (cards) => ({
     type: "CLIENT_SET_CREDIT_CARDS",
     payload: cards,
 });
+
+export const setAuthChecked = (value) => ({
+    type: "CLIENT_SET_AUTH_CHECKED",
+    payload: value,
+});
