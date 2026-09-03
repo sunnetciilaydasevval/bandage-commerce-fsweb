@@ -81,6 +81,8 @@ function getProductPrice(product) {
     );
 }
 
+let ordersRequest = null;
+
 export default function PreviousOrders() {
     const dispatch = useDispatch();
 
@@ -107,9 +109,13 @@ export default function PreviousOrders() {
                 setLoading(true);
                 setError(false);
 
-                await dispatch(
-                    getOrders()
-                );
+                if (!ordersRequest) {
+                    ordersRequest = dispatch(getOrders()).finally(() => {
+                        ordersRequest = null;
+                    });
+                }
+
+                await ordersRequest;
             } catch (error) {
                 console.error(
                     "Previous orders could not be loaded:",

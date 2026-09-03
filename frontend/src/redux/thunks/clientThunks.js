@@ -30,12 +30,11 @@ export const loginUser = (
     rememberMe = false
 ) => {
     return async (dispatch) => {
-        try {
-            const response =
-                await loginRequest({
-                    email: formData.email,
-                    password: formData.password,
-                });
+        const response =
+            await loginRequest({
+                email: formData.email,
+                password: formData.password,
+            });
 
             const responseData =
                 response.data;
@@ -101,10 +100,7 @@ export const loginUser = (
                 setAuthChecked(true)
             );
 
-            return responseData;
-        } catch (error) {
-            throw error;
-        }
+        return responseData;
     };
 };
 
@@ -170,6 +166,10 @@ export const verifyToken = () => {
             const user =
                 responseData?.user ||
                 responseData;
+
+            if (!user || Object.keys(user).length === 0) {
+                throw new Error("Token verification returned no user.");
+            }
 
             /*
              * Backend yeni/yenilenmiş token
@@ -308,7 +308,9 @@ export const getRoles = () => {
 
             dispatch(
                 setRoles(
-                    response.data || []
+                    Array.isArray(response.data)
+                        ? response.data
+                        : response.data?.roles || []
                 )
             );
         } catch (error) {
@@ -335,13 +337,19 @@ export const getAddresses = () => {
                     "/user/address"
                 );
 
+            const responseData = response.data;
+            const addresses = Array.isArray(responseData)
+                ? responseData
+                : responseData && typeof responseData === "object"
+                    ? Object.values(responseData)
+                    : [];
+
             dispatch({
                 type: "SET_ADDRESS_LIST",
-                payload:
-                    response.data || [],
+                payload: addresses,
             });
 
-            return response.data;
+            return addresses;
         } catch (error) {
             console.error(
                 "Failed to fetch addresses:",
@@ -442,8 +450,12 @@ export const fetchCards = () => {
             const response =
                 await getCards();
 
-            const cards =
-                response.data || [];
+            const responseData = response.data;
+            const cards = Array.isArray(responseData)
+                ? responseData
+                : responseData && typeof responseData === "object"
+                    ? Object.values(responseData)
+                    : [];
 
             dispatch(
                 setCreditCards(cards)

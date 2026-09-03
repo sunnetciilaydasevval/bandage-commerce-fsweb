@@ -1,5 +1,5 @@
 import { Play } from "lucide-react";
-import { clothingImages } from "../data/products";
+import { useNavigate } from "react-router-dom";
 
 const aboutHero = "https://www.figma.com/api/mcp/asset/c7dc537d-ecfc-4ae4-901d-a3661f808212.png";
 const videoImage = "https://www.figma.com/api/mcp/asset/70983b6b-7632-4801-93bf-e46e015b01bd.png";
@@ -11,9 +11,10 @@ const stats = [
 ];
 
 export default function AboutUs() {
+    const navigate = useNavigate();
+
     const handleGetQuote = () => {
-        // Placeholder until the quote flow is implemented.
-        console.log("Get Quote Now clicked");
+        navigate("/contact");
     };
 
     return (

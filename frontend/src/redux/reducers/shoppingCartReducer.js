@@ -1,5 +1,20 @@
+let storedCart = [];
+
+try {
+    const serializedCart = localStorage.getItem("cart");
+    const parsedCart = serializedCart
+        ? JSON.parse(serializedCart)
+        : [];
+
+    storedCart = Array.isArray(parsedCart)
+        ? parsedCart
+        : [];
+} catch {
+    storedCart = [];
+}
+
 const initialState = {
-    cart: [],
+    cart: storedCart,
     payment: {},
     address: {},
 };

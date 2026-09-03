@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 import { signup } from "../api/auth";
 import { getRoles } from "../redux/thunks/clientThunks";
@@ -10,6 +11,7 @@ function SignUp() {
     const [submitError, setSubmitError] = useState("");
 
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
 
     const roles = useSelector(
@@ -78,10 +80,8 @@ function SignUp() {
         setSubmitError("");
 
         try {
-            const {
-                passwordValidation,
-                ...formData
-            } = data;
+            const formData = { ...data };
+            delete formData.passwordValidation;
 
             formData.role_id = Number(
                 formData.role_id
@@ -91,24 +91,13 @@ function SignUp() {
                 delete formData.store;
             }
 
-            const response = await signup(formData);
-
-            console.log(
-                "Signup successful:",
-                response.data
-            );
+            await signup(formData);
 
             const message =
                 "You need to click link in email to activate your account!";
 
-            sessionStorage.setItem(
-                "signupMessage",
-                message
-            );
-
-            alert(message);
-
-            navigate(-1);
+            toast.success(message);
+            navigate(location.state?.from || "/", { replace: true });
         } catch (error) {
             console.error(
                 "Signup failed:",
@@ -121,6 +110,7 @@ function SignUp() {
                 "Signup failed. Please try again.";
 
             setSubmitError(message);
+            toast.error(message);
         }
     };
 
@@ -595,7 +585,7 @@ function SignUp() {
                                 className="mt-2 flex min-h-12 items-center justify-center rounded-md bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d96dc] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {isSubmitting
-                                    ? "Creating Account..."
+                                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating Account...</>
                                     : "Sign Up"}
                             </button>
                         </form>

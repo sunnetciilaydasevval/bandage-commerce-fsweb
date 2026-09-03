@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { getGravatarUrl } from "../utils/gravatar";
 
@@ -13,7 +13,10 @@ import {
     Menu,
     X,
     ChevronDown,
+    LogOut,
 } from "lucide-react";
+
+import { logoutUser } from "../redux/thunks/clientThunks";
 
 import {
     FaInstagram,
@@ -50,6 +53,7 @@ function createCategoryUrl(category) {
 }
 
 export default function Header() {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] =
@@ -65,6 +69,9 @@ export default function Header() {
         useState(false);
 
     const [isSearchOpen, setIsSearchOpen] =
+        useState(false);
+
+    const [isCartOpen, setIsCartOpen] =
         useState(false);
 
     const [searchTerm, setSearchTerm] =
@@ -186,6 +193,15 @@ export default function Header() {
         setSearchTerm("");
     };
 
+    const handleLogout = () => {
+        dispatch(logoutUser());
+        setIsUserMenuOpen(false);
+        closeMobileMenu();
+        navigate("/");
+    };
+
+    const closeCart = () => setIsCartOpen(false);
+
     return (
         <header className="w-full bg-white font-['Montserrat',sans-serif]">
 
@@ -267,7 +283,7 @@ export default function Header() {
             </div>
 
             {/* MAIN NAVIGATION */}
-            <nav className="mx-auto flex min-h-[82px] max-w-[1438px] items-start justify-between px-6 py-6 lg:items-center lg:px-8 lg:py-3">
+            <nav className="relative mx-auto flex min-h-[82px] max-w-[1438px] items-start justify-between px-6 py-6 lg:items-center lg:px-8 lg:py-3">
 
                 {/* LOGO */}
                 <Link
@@ -456,7 +472,7 @@ export default function Header() {
                                 <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md border border-[#eeeeee] bg-white py-2 shadow-lg">
 
                                     <Link
-                                        to="/previous-orders"
+                                        to="/orders"
                                         onClick={() =>
                                             setIsUserMenuOpen(
                                                 false
@@ -466,6 +482,15 @@ export default function Header() {
                                     >
                                         Previous Orders
                                     </Link>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-bold text-[#737373] transition-colors hover:bg-[#f5f5f5] hover:text-[#e74040]"
+                                    >
+                                        <LogOut size={16} />
+                                        Logout
+                                    </button>
 
                                 </div>
                             )}
@@ -529,17 +554,40 @@ export default function Header() {
                     )}
 
                     {/* CART */}
-                    <Link
-                        to="/cart"
-                        aria-label="Shopping cart"
-                        className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
-                    >
-                        <ShoppingCart size={18} />
+                    <div className="relative">
+                        <button
+                            type="button"
+                            aria-label="Shopping cart"
+                            aria-expanded={isCartOpen}
+                            onClick={() => setIsCartOpen((current) => !current)}
+                            className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                        >
+                            <ShoppingCart size={18} />
+                            <span className="text-xs">{cartCount}</span>
+                        </button>
 
-                        <span className="text-xs">
-                            {cartCount}
-                        </span>
-                    </Link>
+                        {isCartOpen && (
+                            <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-md border border-[#eeeeee] bg-white p-4 shadow-lg">
+                                <h3 className="mb-3 text-sm font-bold text-[#252b42]">Cart</h3>
+                                {cart.length === 0 ? (
+                                    <p className="py-4 text-sm text-[#737373]">Your cart is empty.</p>
+                                ) : (
+                                    <div className="flex max-h-64 flex-col gap-3 overflow-y-auto">
+                                        {cart.slice(0, 4).map((item) => (
+                                            <div key={item.product.id} className="flex items-center gap-3">
+                                                <img src={item.product?.images?.[0]?.url} alt="" className="h-12 w-10 object-cover" />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate text-xs font-bold text-[#252b42]">{item.product?.name}</p>
+                                                    <p className="text-xs text-[#737373]">Qty: {item.count}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <Link to="/cart" onClick={closeCart} className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white">View Cart</Link>
+                            </div>
+                        )}
+                    </div>
 
                     {/* FAVORITES */}
                     <Link
@@ -606,9 +654,11 @@ export default function Header() {
                     )}
 
                     {/* CART */}
-                    <Link
-                        to="/cart"
+                    <button
+                        type="button"
                         aria-label="Shopping cart"
+                        aria-expanded={isCartOpen}
+                        onClick={() => setIsCartOpen((current) => !current)}
                         className="relative p-0 text-[#252b42]"
                     >
                         <ShoppingCart size={22} />
@@ -618,7 +668,7 @@ export default function Header() {
                                 {cartCount}
                             </span>
                         )}
-                    </Link>
+                    </button>
 
                     {/* FAVORITES */}
                     <Link
@@ -663,6 +713,28 @@ export default function Header() {
 
                 </div>
 
+                {isCartOpen && (
+                    <div className="absolute right-4 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-[#eeeeee] bg-white p-4 shadow-lg lg:hidden">
+                        <h3 className="mb-3 text-sm font-bold text-[#252b42]">Cart</h3>
+                        {cart.length === 0 ? (
+                            <p className="py-4 text-sm text-[#737373]">Your cart is empty.</p>
+                        ) : (
+                            <div className="flex max-h-56 flex-col gap-3 overflow-y-auto">
+                                {cart.slice(0, 4).map((item) => (
+                                    <div key={item.product.id} className="flex items-center gap-3">
+                                        <img src={item.product?.images?.[0]?.url} alt="" className="h-12 w-10 object-cover" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-xs font-bold text-[#252b42]">{item.product?.name}</p>
+                                            <p className="text-xs text-[#737373]">Qty: {item.count}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <Link to="/cart" onClick={closeCart} className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white">View Cart</Link>
+                    </div>
+                )}
+
             </nav>
 
             {/* MOBILE NAVIGATION */}
@@ -699,15 +771,24 @@ export default function Header() {
                         )}
 
                         {isLoggedIn && (
-                            <Link
-                                to="/previous-orders"
-                                onClick={
-                                    closeMobileMenu
-                                }
-                                className="text-[24px] leading-8 text-[#23a6f0]"
-                            >
-                                Previous Orders
-                            </Link>
+                            <div className="flex flex-col items-center gap-4">
+                                <Link
+                                    to="/orders"
+                                    onClick={closeMobileMenu}
+                                    className="text-[24px] leading-8 text-[#23a6f0]"
+                                >
+                                    Previous Orders
+                                </Link>
+
+                                <button
+                                    type="button"
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 text-[20px] font-bold text-[#e74040]"
+                                >
+                                    <LogOut size={18} />
+                                    Logout
+                                </button>
+                            </div>
                         )}
 
                         {/* NAV ITEMS */}

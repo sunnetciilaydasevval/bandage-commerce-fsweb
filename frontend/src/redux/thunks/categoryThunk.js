@@ -16,7 +16,11 @@ export const fetchCategories = () => {
         try {
             const response = await api.get("/categories");
 
-            dispatch(setCategories(response.data));
+            const categories = Array.isArray(response.data)
+                ? response.data
+                : response.data?.categories || [];
+
+            dispatch(setCategories(categories));
         } catch (error) {
             console.error(
                 "Failed to fetch categories:",

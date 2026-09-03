@@ -1,6 +1,6 @@
 import "./i18n/i18n";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -33,11 +33,16 @@ import {
 } from "./redux/thunks/categoryThunk";
 
 import {
+  fetchProducts,
+} from "./redux/thunks/productThunk";
+
+import {
   verifyToken,
 } from "./redux/thunks/clientThunks";
 
 function AppRoutes() {
   const dispatch = useDispatch();
+  const initializationStarted = useRef(false);
 
   const authChecked = useSelector(
     (state) =>
@@ -45,12 +50,25 @@ function AppRoutes() {
   );
 
   useEffect(() => {
+    if (initializationStarted.current) {
+      return;
+    }
+
+    initializationStarted.current = true;
+
     dispatch(
       verifyToken()
     );
 
     dispatch(
       fetchCategories()
+    );
+
+    dispatch(
+      fetchProducts({
+        limit: 25,
+        offset: 0,
+      })
     );
   }, [dispatch]);
 
@@ -105,6 +123,11 @@ function AppRoutes() {
         />
 
         <Route
+          path="/product/:productNameSlug/:productId"
+          element={<Product />}
+        />
+
+        <Route
           path="/cart"
           element={<ShoppingCart />}
         />
@@ -152,6 +175,15 @@ function AppRoutes() {
 
         <Route
           path="/previous-orders"
+          element={
+            <ProtectedRoute>
+              <PreviousOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders"
           element={
             <ProtectedRoute>
               <PreviousOrders />

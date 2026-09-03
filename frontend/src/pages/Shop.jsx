@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
     useDispatch,
     useSelector,
@@ -50,22 +50,9 @@ export default function Shop() {
         (state) => state.product
     );
 
-    const [filter, setFilter] =
-        useState(
-            searchParams.get("filter") || ""
-        );
-
-    const [sort, setSort] =
-        useState(
-            searchParams.get("sort") || ""
-        );
-
-    const [currentPage, setCurrentPage] =
-        useState(
-            Number(
-                searchParams.get("page")
-            ) || 1
-        );
+    const filter = searchParams.get("filter") || "";
+    const sort = searchParams.get("sort") || "";
+    const currentPage = Number(searchParams.get("page")) || 1;
 
     const limit = 25;
 
@@ -79,46 +66,6 @@ export default function Shop() {
     const totalPages = Math.ceil(
         total / limit
     );
-
-    /*
-     * URL değiştiğinde search state'ini
-     * URL ile senkronize et.
-     */
-    useEffect(() => {
-        const urlFilter =
-            searchParams.get("filter") || "";
-
-        const urlSort =
-            searchParams.get("sort") || "";
-
-        const urlPage =
-            Number(
-                searchParams.get("page")
-            ) || 1;
-
-        setFilter(urlFilter);
-        setSort(urlSort);
-        setCurrentPage(urlPage);
-    }, [searchParams]);
-
-    /*
-     * Category değiştiğinde
-     * 1. sayfaya dön.
-     */
-    useEffect(() => {
-        setCurrentPage(1);
-
-        const params =
-            new URLSearchParams(
-                searchParams
-            );
-
-        params.delete("page");
-
-        setSearchParams(params);
-    }, [
-        category,
-    ]);
 
     /*
      * Category / filter / sort / page
@@ -149,9 +96,6 @@ export default function Shop() {
         const value =
             event.target.value;
 
-        setFilter(value);
-        setCurrentPage(1);
-
         const params =
             new URLSearchParams(
                 searchParams
@@ -176,9 +120,6 @@ export default function Shop() {
     ) => {
         const value =
             event.target.value;
-
-        setSort(value);
-        setCurrentPage(1);
 
         const params =
             new URLSearchParams(
@@ -209,8 +150,6 @@ export default function Shop() {
         ) {
             return;
         }
-
-        setCurrentPage(page);
 
         const params =
             new URLSearchParams(
@@ -351,8 +290,15 @@ export default function Shop() {
                 {/* ERROR */}
                 {fetchState ===
                     "FAILED" && (
-                        <div className="py-20 text-center text-red-500">
-                            Products could not be loaded.
+                        <div className="flex flex-col items-center gap-4 py-20 text-center text-red-500">
+                            <p>Products could not be loaded.</p>
+                            <button
+                                type="button"
+                                onClick={() => dispatch(fetchProducts({ category, filter, sort, limit, offset }))}
+                                className="bg-[#23a6f0] px-5 py-3 text-sm font-bold text-white"
+                            >
+                                Try Again
+                            </button>
                         </div>
                     )}
 

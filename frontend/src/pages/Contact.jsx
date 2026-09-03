@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     CircleUserRound,
     Camera,
@@ -25,6 +26,7 @@ const phoneDisplay = "(225) 555-0118";
 const email = "michelle.rivera@example.com";
 
 export default function Contact() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -67,8 +69,7 @@ export default function Contact() {
     };
 
     const handleTryItFree = () => {
-        // Placeholder until the free-trial flow is implemented.
-        console.log("Try it free now clicked");
+        navigate("/signup");
     };
 
     return (
@@ -341,7 +342,7 @@ export default function Contact() {
                 </form>
             </section>
 
-            {/* SOCIAL / PLACEHOLDER */}
+            {/* SOCIAL LINKS */}
             <section className="flex flex-col items-center px-6 py-20 text-center">
                 <div className="mb-6 flex items-center gap-5 text-[#23a6f0]">
                     <CircleUserRound size={18} />

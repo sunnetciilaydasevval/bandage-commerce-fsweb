@@ -5,6 +5,7 @@ import {
 } from "redux";
 
 import { thunk } from "redux-thunk";
+import { createLogger } from "redux-logger";
 
 import orderReducer from "./reducers/orderReducer";
 import clientReducer from "./reducers/clientReducer";
@@ -22,7 +23,17 @@ const rootReducer = combineReducers({
 
 const store = createStore(
     rootReducer,
-    applyMiddleware(thunk)
+    applyMiddleware(
+        thunk,
+        createLogger()
+    )
 );
+
+store.subscribe(() => {
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(store.getState().shoppingCart.cart)
+    );
+});
 
 export default store;

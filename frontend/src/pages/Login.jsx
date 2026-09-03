@@ -210,7 +210,7 @@ function Login() {
                                 className="mt-2 flex min-h-12 items-center justify-center rounded-md bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d96dc] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {isSubmitting
-                                    ? "Logging in..."
+                                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Logging in...</>
                                     : "Login"}
                             </button>
 

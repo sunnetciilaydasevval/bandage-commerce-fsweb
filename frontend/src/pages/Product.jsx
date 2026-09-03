@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
     Link,
     useParams,
@@ -23,6 +23,7 @@ import {
 
 export default function Product() {
     const dispatch = useDispatch();
+    const requestedProductId = useRef(null);
 
     const {
         product,
@@ -46,9 +47,11 @@ export default function Product() {
     } = useParams();
 
     useEffect(() => {
-        if (!productId) {
+        if (!productId || requestedProductId.current === productId) {
             return;
         }
+
+        requestedProductId.current = productId;
 
         dispatch(
             fetchProduct(productId)

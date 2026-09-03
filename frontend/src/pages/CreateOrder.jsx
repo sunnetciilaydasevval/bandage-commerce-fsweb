@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import {
     getAddresses,
@@ -117,6 +118,8 @@ const emptyPayment = {
     card_ccv: "",
 };
 
+let checkoutDataRequest = null;
+
 function getProductDetail(product) {
     const color =
         product?.color?.name ||
@@ -209,6 +212,15 @@ function CreateOrder() {
     const [isOrdering, setIsOrdering] =
         useState(false);
 
+    const [checkoutLoading, setCheckoutLoading] =
+        useState(true);
+
+    const [checkoutError, setCheckoutError] =
+        useState("");
+
+    const [checkoutAttempt, setCheckoutAttempt] =
+        useState(0);
+
     const {
         register,
         handleSubmit,
@@ -245,9 +257,43 @@ function CreateOrder() {
     });
 
     useEffect(() => {
-        dispatch(getAddresses());
-        dispatch(fetchCards());
-    }, [dispatch]);
+        let active = true;
+
+        const loadCheckoutData = async () => {
+            setCheckoutLoading(true);
+            setCheckoutError("");
+
+            try {
+                if (!checkoutDataRequest) {
+                    checkoutDataRequest = Promise.all([
+                        dispatch(getAddresses()),
+                        dispatch(fetchCards()),
+                    ]).finally(() => {
+                        checkoutDataRequest = null;
+                    });
+                }
+
+                await checkoutDataRequest;
+            } catch (error) {
+                if (active) {
+                    setCheckoutError(
+                        error.response?.data?.message ||
+                        "Checkout information could not be loaded."
+                    );
+                }
+            } finally {
+                if (active) {
+                    setCheckoutLoading(false);
+                }
+            }
+        };
+
+        loadCheckoutData();
+
+        return () => {
+            active = false;
+        };
+    }, [dispatch, checkoutAttempt]);
 
     const selectedItems = useMemo(
         () =>
@@ -320,6 +366,7 @@ function CreateOrder() {
                 );
             }
 
+            toast.success(editingAddress ? "Address updated." : "Address saved.");
             closeForm();
         } catch (error) {
             console.error(
@@ -327,7 +374,7 @@ function CreateOrder() {
                 error
             );
 
-            alert(
+            toast.error(
                 "Address could not be saved."
             );
         }
@@ -340,6 +387,8 @@ function CreateOrder() {
             await dispatch(
                 deleteAddress(addressId)
             );
+
+            toast.success("Address deleted.");
 
             if (
                 shippingAddress?.id ===
@@ -360,7 +409,7 @@ function CreateOrder() {
                 error
             );
 
-            alert(
+            toast.error(
                 "Address could not be deleted."
             );
         }
@@ -438,6 +487,7 @@ function CreateOrder() {
                 );
             }
 
+            toast.success(editingCard ? "Card updated." : "Card saved.");
             closeCardForm();
         } catch (error) {
             console.error(
@@ -445,7 +495,7 @@ function CreateOrder() {
                 error
             );
 
-            alert(
+            toast.error(
                 "Card could not be saved."
             );
         }
@@ -458,6 +508,8 @@ function CreateOrder() {
             await dispatch(
                 removeCard(cardId)
             );
+
+            toast.success("Card deleted.");
 
             if (
                 selectedCard?.id ===
@@ -474,7 +526,7 @@ function CreateOrder() {
                 error
             );
 
-            alert(
+            toast.error(
                 "Card could not be deleted."
             );
         }
@@ -489,7 +541,7 @@ function CreateOrder() {
         paymentData
     ) => {
         if (!shippingAddress) {
-            alert(
+            toast.info(
                 "Please select a shipping address."
             );
             setStep(1);
@@ -497,7 +549,7 @@ function CreateOrder() {
         }
 
         if (!receiptAddress) {
-            alert(
+            toast.info(
                 "Please select a receipt address."
             );
             setStep(1);
@@ -505,14 +557,14 @@ function CreateOrder() {
         }
 
         if (!selectedCard) {
-            alert(
+            toast.info(
                 "Please select a payment card."
             );
             return;
         }
 
         if (selectedItems.length === 0) {
-            alert(
+            toast.info(
                 "Please select at least one product."
             );
             navigate("/cart");
@@ -520,7 +572,7 @@ function CreateOrder() {
         }
 
         if (orderPrice <= 0) {
-            alert(
+            toast.info(
                 "Order total must be greater than zero."
             );
             return;
@@ -549,9 +601,6 @@ function CreateOrder() {
             const orderData = {
                 address_id:
                     shippingAddress.id,
-
-                receipt_address_id:
-                    receiptAddress.id,
 
                 order_date:
                     new Date().toISOString(),
@@ -586,7 +635,7 @@ function CreateOrder() {
                 createOrder(orderData)
             );
 
-            dispatch(setCart([]));
+            dispatch(setCart(cart.filter((item) => item.checked === false)));
 
             setShippingAddress(null);
             setReceiptAddress(null);
@@ -598,7 +647,7 @@ function CreateOrder() {
 
             setStep(1);
 
-            alert(
+            toast.success(
                 "Congratulations! Your order has been successfully created."
             );
 
@@ -609,7 +658,7 @@ function CreateOrder() {
                 error
             );
 
-            alert(
+            toast.error(
                 "Order could not be created. Please try again."
             );
         } finally {
@@ -617,9 +666,24 @@ function CreateOrder() {
         }
     };
 
+    if (checkoutLoading) {
+        return (
+            <main className="flex min-h-screen items-center justify-center bg-white px-6">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" aria-label="Loading checkout" />
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
+                {checkoutError && (
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                        <span>{checkoutError}</span>
+                        <button type="button" onClick={() => setCheckoutAttempt((attempt) => attempt + 1)} className="font-bold underline">Retry</button>
+                    </div>
+                )}
+
                 <h1 className="mb-10 text-3xl font-bold">
                     Create Order
                 </h1>
@@ -1670,7 +1734,7 @@ function CreateOrder() {
                                             className="w-full bg-[#23a6f0] px-6 py-4 font-bold text-white disabled:opacity-50"
                                         >
                                             {isOrdering
-                                                ? "Creating Order..."
+                                                ? <><span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating Order...</>
                                                 : "Complete Order"}
                                         </button>
                                     </div>

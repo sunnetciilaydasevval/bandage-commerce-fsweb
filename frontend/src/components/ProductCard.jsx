@@ -93,7 +93,7 @@ export default function ProductCard({
                 <Link
                     to={
                         productUrl ||
-                        `/product/${product.id}`
+                        `/product/product/${product.id}`
                     }
                     className="block"
                 >
@@ -137,7 +137,7 @@ export default function ProductCard({
                 <Link
                     to={
                         productUrl ||
-                        `/product/${product.id}`
+                        `/product/product/${product.id}`
                     }
                     className="cursor-pointer text-[14px] font-bold leading-6 tracking-[0.2px] text-[#252b42] transition-colors hover:text-[#23a6f0]"
                 >

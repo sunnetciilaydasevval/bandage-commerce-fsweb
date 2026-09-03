@@ -7,45 +7,55 @@ import {
     setFetchState,
 } from "../actions/productActions";
 
+const productRequests = new Map();
+
 export const fetchProducts = (params = {}) => {
     return async (dispatch) => {
-        dispatch(setFetchState("FETCHING"));
+        const cleanParams = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== undefined &&
+                    value !== null &&
+                    value !== ""
+            )
+        );
+        const requestKey = JSON.stringify(cleanParams);
 
-        try {
-            const cleanParams = Object.fromEntries(
-                Object.entries(params).filter(
-                    ([, value]) =>
-                        value !== undefined &&
-                        value !== null &&
-                        value !== ""
-                )
-            );
-
-            const response = await api.get("/products", {
-                params: cleanParams,
-            });
-
-            dispatch(
-                setProductList(
-                    response.data.products || []
-                )
-            );
-
-            dispatch(
-                setTotal(
-                    response.data.total || 0
-                )
-            );
-
-            dispatch(setFetchState("FETCHED"));
-        } catch (error) {
-            console.error(
-                "Failed to fetch products:",
-                error
-            );
-
-            dispatch(setFetchState("FAILED"));
+        if (productRequests.has(requestKey)) {
+            return productRequests.get(requestKey);
         }
+
+        const request = (async () => {
+            dispatch(setFetchState("FETCHING"));
+
+            try {
+
+                const response = await api.get("/products", {
+                    params: cleanParams,
+                });
+
+                const responseData = response.data || {};
+                const products = Array.isArray(responseData)
+                    ? responseData
+                    : responseData.products || [];
+
+                dispatch(setProductList(products));
+
+                dispatch(setTotal(Number(responseData.total ?? products.length)));
+
+                dispatch(setFetchState("FETCHED"));
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+
+                dispatch(setFetchState("FAILED"));
+                throw error;
+            } finally {
+                productRequests.delete(requestKey);
+            }
+        })();
+
+        productRequests.set(requestKey, request);
+        return request;
     };
 };
 

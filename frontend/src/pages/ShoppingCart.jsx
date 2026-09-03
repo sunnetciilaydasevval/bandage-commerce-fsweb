@@ -3,6 +3,7 @@ import {
     useSelector,
 } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import {
     increaseCartItem,
@@ -73,7 +74,7 @@ export default function ShoppingCart() {
 
     const handleCreateOrder = () => {
         if (selectedItems.length === 0) {
-            alert(
+            toast.info(
                 "Please select at least one product."
             );
 
