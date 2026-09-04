@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 import {
     getAddresses,
@@ -165,6 +166,8 @@ function maskCardNumber(cardNumber) {
 }
 
 function CreateOrder() {
+    const { t } = useTranslation();
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -187,37 +190,25 @@ function CreateOrder() {
         );
 
     const [step, setStep] = useState(1);
-
-    const [showForm, setShowForm] =
-        useState(false);
-
+    const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] =
         useState(null);
-
     const [shippingAddress, setShippingAddress] =
         useState(null);
-
     const [receiptAddress, setReceiptAddress] =
         useState(null);
-
     const [showCardForm, setShowCardForm] =
         useState(false);
-
     const [editingCard, setEditingCard] =
         useState(null);
-
     const [selectedCard, setSelectedCard] =
         useState(null);
-
     const [isOrdering, setIsOrdering] =
         useState(false);
-
     const [checkoutLoading, setCheckoutLoading] =
         useState(true);
-
     const [checkoutError, setCheckoutError] =
         useState("");
-
     const [checkoutAttempt, setCheckoutAttempt] =
         useState(0);
 
@@ -265,20 +256,29 @@ function CreateOrder() {
 
             try {
                 if (!checkoutDataRequest) {
-                    checkoutDataRequest = Promise.all([
-                        dispatch(getAddresses()),
-                        dispatch(fetchCards()),
-                    ]).finally(() => {
-                        checkoutDataRequest = null;
-                    });
+                    checkoutDataRequest =
+                        Promise.all([
+                            dispatch(
+                                getAddresses()
+                            ),
+                            dispatch(
+                                fetchCards()
+                            ),
+                        ]).finally(() => {
+                            checkoutDataRequest =
+                                null;
+                        });
                 }
 
                 await checkoutDataRequest;
             } catch (error) {
                 if (active) {
                     setCheckoutError(
-                        error.response?.data?.message ||
-                        "Checkout information could not be loaded."
+                        error.response?.data
+                            ?.message ||
+                        t(
+                            "createOrder.checkoutError"
+                        )
                     );
                 }
             } finally {
@@ -293,7 +293,11 @@ function CreateOrder() {
         return () => {
             active = false;
         };
-    }, [dispatch, checkoutAttempt]);
+    }, [
+        dispatch,
+        checkoutAttempt,
+        t,
+    ]);
 
     const selectedItems = useMemo(
         () =>
@@ -366,7 +370,16 @@ function CreateOrder() {
                 );
             }
 
-            toast.success(editingAddress ? "Address updated." : "Address saved.");
+            toast.success(
+                editingAddress
+                    ? t(
+                        "createOrder.addressUpdated"
+                    )
+                    : t(
+                        "createOrder.addressSaved"
+                    )
+            );
+
             closeForm();
         } catch (error) {
             console.error(
@@ -375,7 +388,9 @@ function CreateOrder() {
             );
 
             toast.error(
-                "Address could not be saved."
+                t(
+                    "createOrder.addressSaveError"
+                )
             );
         }
     };
@@ -388,7 +403,11 @@ function CreateOrder() {
                 deleteAddress(addressId)
             );
 
-            toast.success("Address deleted.");
+            toast.success(
+                t(
+                    "createOrder.addressDeleted"
+                )
+            );
 
             if (
                 shippingAddress?.id ===
@@ -410,7 +429,9 @@ function CreateOrder() {
             );
 
             toast.error(
-                "Address could not be deleted."
+                t(
+                    "createOrder.addressDeleteError"
+                )
             );
         }
     };
@@ -487,7 +508,16 @@ function CreateOrder() {
                 );
             }
 
-            toast.success(editingCard ? "Card updated." : "Card saved.");
+            toast.success(
+                editingCard
+                    ? t(
+                        "createOrder.cardUpdated"
+                    )
+                    : t(
+                        "createOrder.cardSaved"
+                    )
+            );
+
             closeCardForm();
         } catch (error) {
             console.error(
@@ -496,7 +526,9 @@ function CreateOrder() {
             );
 
             toast.error(
-                "Card could not be saved."
+                t(
+                    "createOrder.cardSaveError"
+                )
             );
         }
     };
@@ -509,7 +541,11 @@ function CreateOrder() {
                 removeCard(cardId)
             );
 
-            toast.success("Card deleted.");
+            toast.success(
+                t(
+                    "createOrder.cardDeleted"
+                )
+            );
 
             if (
                 selectedCard?.id ===
@@ -527,7 +563,9 @@ function CreateOrder() {
             );
 
             toast.error(
-                "Card could not be deleted."
+                t(
+                    "createOrder.cardDeleteError"
+                )
             );
         }
     };
@@ -542,39 +580,54 @@ function CreateOrder() {
     ) => {
         if (!shippingAddress) {
             toast.info(
-                "Please select a shipping address."
+                t(
+                    "createOrder.selectShippingAddress"
+                )
             );
+
             setStep(1);
             return;
         }
 
         if (!receiptAddress) {
             toast.info(
-                "Please select a receipt address."
+                t(
+                    "createOrder.selectReceiptAddress"
+                )
             );
+
             setStep(1);
             return;
         }
 
         if (!selectedCard) {
             toast.info(
-                "Please select a payment card."
+                t(
+                    "createOrder.selectPaymentCard"
+                )
             );
+
             return;
         }
 
         if (selectedItems.length === 0) {
             toast.info(
-                "Please select at least one product."
+                t(
+                    "createOrder.selectAtLeastOneProduct"
+                )
             );
+
             navigate("/cart");
             return;
         }
 
         if (orderPrice <= 0) {
             toast.info(
-                "Order total must be greater than zero."
+                t(
+                    "createOrder.orderTotalGreaterThanZero"
+                )
             );
+
             return;
         }
 
@@ -635,7 +688,15 @@ function CreateOrder() {
                 createOrder(orderData)
             );
 
-            dispatch(setCart(cart.filter((item) => item.checked === false)));
+            dispatch(
+                setCart(
+                    cart.filter(
+                        (item) =>
+                            item.checked ===
+                            false
+                    )
+                )
+            );
 
             setShippingAddress(null);
             setReceiptAddress(null);
@@ -648,7 +709,9 @@ function CreateOrder() {
             setStep(1);
 
             toast.success(
-                "Congratulations! Your order has been successfully created."
+                t(
+                    "createOrder.orderCreated"
+                )
             );
 
             navigate("/");
@@ -659,7 +722,9 @@ function CreateOrder() {
             );
 
             toast.error(
-                "Order could not be created. Please try again."
+                t(
+                    "createOrder.orderCreateError"
+                )
             );
         } finally {
             setIsOrdering(false);
@@ -669,7 +734,13 @@ function CreateOrder() {
     if (checkoutLoading) {
         return (
             <main className="flex min-h-screen items-center justify-center bg-white px-6">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" aria-label="Loading checkout" />
+                <div
+                    className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]"
+                    role="status"
+                    aria-label={t(
+                        "createOrder.checkoutLoading"
+                    )}
+                />
             </main>
         );
     }
@@ -677,15 +748,40 @@ function CreateOrder() {
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
+
                 {checkoutError && (
-                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-                        <span>{checkoutError}</span>
-                        <button type="button" onClick={() => setCheckoutAttempt((attempt) => attempt + 1)} className="font-bold underline">Retry</button>
+                    <div
+                        className="mb-6 flex flex-wrap items-center justify-between gap-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                        role="alert"
+                    >
+                        <span>
+                            {checkoutError}
+                        </span>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setCheckoutAttempt(
+                                    (
+                                        attempt
+                                    ) =>
+                                        attempt +
+                                        1
+                                )
+                            }
+                            className="font-bold underline"
+                        >
+                            {t(
+                                "createOrder.retry"
+                            )}
+                        </button>
                     </div>
                 )}
 
                 <h1 className="mb-10 text-3xl font-bold">
-                    Create Order
+                    {t(
+                        "createOrder.title"
+                    )}
                 </h1>
 
                 <div className="mb-8 flex gap-4">
@@ -699,7 +795,9 @@ function CreateOrder() {
                                 : "border"
                             }`}
                     >
-                        Address
+                        {t(
+                            "createOrder.address"
+                        )}
                     </button>
 
                     <button
@@ -716,7 +814,9 @@ function CreateOrder() {
                                 : "border"
                             } disabled:opacity-50`}
                     >
-                        Order
+                        {t(
+                            "createOrder.order"
+                        )}
                     </button>
                 </div>
 
@@ -724,7 +824,9 @@ function CreateOrder() {
                     <section>
                         <div className="mb-8 flex items-center justify-between">
                             <h2 className="text-2xl font-bold">
-                                Addresses
+                                {t(
+                                    "createOrder.addresses"
+                                )}
                             </h2>
 
                             <button
@@ -734,7 +836,9 @@ function CreateOrder() {
                                 }
                                 className="bg-[#23a6f0] px-5 py-3 font-bold text-white"
                             >
-                                Add Address
+                                {t(
+                                    "createOrder.addAddress"
+                                )}
                             </button>
                         </div>
 
@@ -747,8 +851,12 @@ function CreateOrder() {
                             >
                                 <h3 className="mb-6 text-xl font-bold">
                                     {editingAddress
-                                        ? "Update Address"
-                                        : "Add Address"}
+                                        ? t(
+                                            "createOrder.updateAddress"
+                                        )
+                                        : t(
+                                            "createOrder.addAddress"
+                                        )}
                                 </h3>
 
                                 <div className="grid gap-5 md:grid-cols-2">
@@ -757,7 +865,9 @@ function CreateOrder() {
                                             htmlFor="title"
                                             className="mb-2 block font-bold"
                                         >
-                                            Address Title
+                                            {t(
+                                                "createOrder.addressTitle"
+                                            )}
                                         </label>
 
                                         <input
@@ -767,7 +877,9 @@ function CreateOrder() {
                                                 "title",
                                                 {
                                                     required:
-                                                        "Address title is required",
+                                                        t(
+                                                            "createOrder.addressTitleRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
@@ -789,7 +901,9 @@ function CreateOrder() {
                                             htmlFor="name"
                                             className="mb-2 block font-bold"
                                         >
-                                            Name
+                                            {t(
+                                                "createOrder.name"
+                                            )}
                                         </label>
 
                                         <input
@@ -799,7 +913,9 @@ function CreateOrder() {
                                                 "name",
                                                 {
                                                     required:
-                                                        "Name is required",
+                                                        t(
+                                                            "createOrder.nameRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
@@ -821,7 +937,9 @@ function CreateOrder() {
                                             htmlFor="surname"
                                             className="mb-2 block font-bold"
                                         >
-                                            Surname
+                                            {t(
+                                                "createOrder.surname"
+                                            )}
                                         </label>
 
                                         <input
@@ -831,7 +949,9 @@ function CreateOrder() {
                                                 "surname",
                                                 {
                                                     required:
-                                                        "Surname is required",
+                                                        t(
+                                                            "createOrder.surnameRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
@@ -853,7 +973,9 @@ function CreateOrder() {
                                             htmlFor="phone"
                                             className="mb-2 block font-bold"
                                         >
-                                            Phone
+                                            {t(
+                                                "createOrder.phone"
+                                            )}
                                         </label>
 
                                         <input
@@ -863,7 +985,9 @@ function CreateOrder() {
                                                 "phone",
                                                 {
                                                     required:
-                                                        "Phone is required",
+                                                        t(
+                                                            "createOrder.phoneRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
@@ -885,7 +1009,9 @@ function CreateOrder() {
                                             htmlFor="city"
                                             className="mb-2 block font-bold"
                                         >
-                                            City (İl)
+                                            {t(
+                                                "createOrder.city"
+                                            )}
                                         </label>
 
                                         <select
@@ -894,13 +1020,17 @@ function CreateOrder() {
                                                 "city",
                                                 {
                                                     required:
-                                                        "City is required",
+                                                        t(
+                                                            "createOrder.cityRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
                                         >
                                             <option value="">
-                                                Select city
+                                                {t(
+                                                    "createOrder.selectCity"
+                                                )}
                                             </option>
 
                                             {cities.map(
@@ -915,7 +1045,13 @@ function CreateOrder() {
                                                             city
                                                         }
                                                     >
-                                                        {city}
+                                                        {t(
+                                                            `cities.${city}`,
+                                                            {
+                                                                defaultValue:
+                                                                    city,
+                                                            }
+                                                        )}
                                                     </option>
                                                 )
                                             )}
@@ -937,7 +1073,9 @@ function CreateOrder() {
                                             htmlFor="district"
                                             className="mb-2 block font-bold"
                                         >
-                                            District (İlçe)
+                                            {t(
+                                                "createOrder.district"
+                                            )}
                                         </label>
 
                                         <input
@@ -947,7 +1085,9 @@ function CreateOrder() {
                                                 "district",
                                                 {
                                                     required:
-                                                        "District is required",
+                                                        t(
+                                                            "createOrder.districtRequired"
+                                                        ),
                                                 }
                                             )}
                                             className="w-full border p-3"
@@ -969,7 +1109,9 @@ function CreateOrder() {
                                             htmlFor="neighborhood"
                                             className="mb-2 block font-bold"
                                         >
-                                            Neighborhood (Mahalle)
+                                            {t(
+                                                "createOrder.neighborhood"
+                                            )}
                                         </label>
 
                                         <textarea
@@ -978,7 +1120,9 @@ function CreateOrder() {
                                                 "neighborhood",
                                                 {
                                                     required:
-                                                        "Neighborhood is required",
+                                                        t(
+                                                            "createOrder.neighborhoodRequired"
+                                                        ),
                                                 }
                                             )}
                                             rows="4"
@@ -1006,10 +1150,20 @@ function CreateOrder() {
                                         className="bg-[#23856d] px-5 py-3 font-bold text-white disabled:opacity-50"
                                     >
                                         {isSubmitting
-                                            ? "Saving..."
+                                            ? t(
+                                                "common.saving",
+                                                {
+                                                    defaultValue:
+                                                        "Saving...",
+                                                }
+                                            )
                                             : editingAddress
-                                                ? "Update Address"
-                                                : "Save Address"}
+                                                ? t(
+                                                    "createOrder.updateAddress"
+                                                )
+                                                : t(
+                                                    "createOrder.saveAddress"
+                                                )}
                                     </button>
 
                                     <button
@@ -1019,7 +1173,9 @@ function CreateOrder() {
                                         }
                                         className="border px-5 py-3 font-bold"
                                     >
-                                        Cancel
+                                        {t(
+                                            "common.cancel"
+                                        )}
                                     </button>
                                 </div>
                             </form>
@@ -1028,14 +1184,17 @@ function CreateOrder() {
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <h3 className="mb-4 text-xl font-bold">
-                                    Shipping Address
+                                    {t(
+                                        "createOrder.shippingAddress"
+                                    )}
                                 </h3>
 
                                 {addressList.length ===
                                     0 ? (
                                     <p className="text-[#737373]">
-                                        No addresses
-                                        available.
+                                        {t(
+                                            "createOrder.noAddresses"
+                                        )}
                                     </p>
                                 ) : (
                                     addressList.map(
@@ -1101,7 +1260,9 @@ function CreateOrder() {
                                                             }
                                                             className="border px-3 py-2 text-sm font-bold"
                                                         >
-                                                            Select
+                                                            {t(
+                                                                "common.select"
+                                                            )}
                                                         </button>
 
                                                         <button
@@ -1113,7 +1274,9 @@ function CreateOrder() {
                                                             }
                                                             className="border px-3 py-2 text-sm font-bold"
                                                         >
-                                                            Edit
+                                                            {t(
+                                                                "common.edit"
+                                                            )}
                                                         </button>
 
                                                         <button
@@ -1125,7 +1288,9 @@ function CreateOrder() {
                                                             }
                                                             className="px-3 py-2 text-sm font-bold text-red-500"
                                                         >
-                                                            Delete
+                                                            {t(
+                                                                "common.delete"
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1137,14 +1302,17 @@ function CreateOrder() {
 
                             <div>
                                 <h3 className="mb-4 text-xl font-bold">
-                                    Receipt Address
+                                    {t(
+                                        "createOrder.receiptAddress"
+                                    )}
                                 </h3>
 
                                 {addressList.length ===
                                     0 ? (
                                     <p className="text-[#737373]">
-                                        No addresses
-                                        available.
+                                        {t(
+                                            "createOrder.noAddresses"
+                                        )}
                                     </p>
                                 ) : (
                                     addressList.map(
@@ -1209,7 +1377,9 @@ function CreateOrder() {
                                                         }
                                                         className="border px-3 py-2 text-sm font-bold"
                                                     >
-                                                        Select
+                                                        {t(
+                                                            "common.select"
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1231,7 +1401,9 @@ function CreateOrder() {
                                 }
                                 className="bg-[#23a6f0] px-6 py-3 font-bold text-white disabled:opacity-50"
                             >
-                                Continue
+                                {t(
+                                    "common.continue"
+                                )}
                             </button>
                         </div>
                     </section>
@@ -1240,13 +1412,17 @@ function CreateOrder() {
                 {step === 2 && (
                     <section>
                         <h2 className="mb-6 text-2xl font-bold">
-                            Order
+                            {t(
+                                "createOrder.order"
+                            )}
                         </h2>
 
                         <div className="mb-6 grid gap-6 md:grid-cols-2">
                             <div className="border p-5">
                                 <h3 className="mb-4 font-bold">
-                                    Shipping Address
+                                    {t(
+                                        "createOrder.shippingAddress"
+                                    )}
                                 </h3>
 
                                 <p>
@@ -1288,7 +1464,9 @@ function CreateOrder() {
 
                             <div className="border p-5">
                                 <h3 className="mb-4 font-bold">
-                                    Receipt Address
+                                    {t(
+                                        "createOrder.receiptAddress"
+                                    )}
                                 </h3>
 
                                 <p>
@@ -1332,7 +1510,9 @@ function CreateOrder() {
                         <div className="mb-6 border p-6">
                             <div className="mb-6 flex items-center justify-between gap-4">
                                 <h3 className="text-xl font-bold">
-                                    Payment Methods
+                                    {t(
+                                        "createOrder.paymentMethods"
+                                    )}
                                 </h3>
 
                                 <button
@@ -1342,7 +1522,9 @@ function CreateOrder() {
                                     }
                                     className="bg-[#23a6f0] px-5 py-3 font-bold text-white"
                                 >
-                                    Add New Card
+                                    {t(
+                                        "createOrder.addNewCard"
+                                    )}
                                 </button>
                             </div>
 
@@ -1355,8 +1537,12 @@ function CreateOrder() {
                                 >
                                     <h4 className="mb-6 text-lg font-bold">
                                         {editingCard
-                                            ? "Update Card"
-                                            : "Add New Card"}
+                                            ? t(
+                                                "createOrder.updateCard"
+                                            )
+                                            : t(
+                                                "createOrder.addNewCard"
+                                            )}
                                     </h4>
 
                                     <div className="grid gap-5 md:grid-cols-2">
@@ -1365,7 +1551,9 @@ function CreateOrder() {
                                                 htmlFor="card_no"
                                                 className="mb-2 block font-bold"
                                             >
-                                                Card Number
+                                                {t(
+                                                    "createOrder.cardNumber"
+                                                )}
                                             </label>
 
                                             <input
@@ -1377,13 +1565,16 @@ function CreateOrder() {
                                                     "card_no",
                                                     {
                                                         required:
-                                                            "Card number is required",
-
+                                                            t(
+                                                                "createOrder.cardNumberRequired"
+                                                            ),
                                                         pattern:
                                                         {
                                                             value: /^[0-9\s]{13,23}$/,
                                                             message:
-                                                                "Enter a valid card number",
+                                                                t(
+                                                                    "createOrder.invalidCardNumber"
+                                                                ),
                                                         },
                                                     }
                                                 )}
@@ -1406,7 +1597,9 @@ function CreateOrder() {
                                                 htmlFor="expire_month"
                                                 className="mb-2 block font-bold"
                                             >
-                                                Expire Month
+                                                {t(
+                                                    "createOrder.expireMonth"
+                                                )}
                                             </label>
 
                                             <input
@@ -1418,18 +1611,22 @@ function CreateOrder() {
                                                     "expire_month",
                                                     {
                                                         required:
-                                                            "Expire month is required",
-
+                                                            t(
+                                                                "createOrder.expireMonthRequired"
+                                                            ),
                                                         min: {
                                                             value: 1,
                                                             message:
-                                                                "Month must be between 1 and 12",
+                                                                t(
+                                                                    "createOrder.monthRange"
+                                                                ),
                                                         },
-
                                                         max: {
                                                             value: 12,
                                                             message:
-                                                                "Month must be between 1 and 12",
+                                                                t(
+                                                                    "createOrder.monthRange"
+                                                                ),
                                                         },
                                                     }
                                                 )}
@@ -1452,19 +1649,23 @@ function CreateOrder() {
                                                 htmlFor="expire_year"
                                                 className="mb-2 block font-bold"
                                             >
-                                                Expire Year
+                                                {t(
+                                                    "createOrder.expireYear"
+                                                )}
                                             </label>
 
                                             <input
                                                 id="expire_year"
                                                 type="number"
-                                                min="2026"
+                                                min={new Date().getFullYear()}
                                                 max="2100"
                                                 {...registerCard(
                                                     "expire_year",
                                                     {
                                                         required:
-                                                            "Expire year is required",
+                                                            t(
+                                                                "createOrder.expireYearRequired"
+                                                            ),
                                                     }
                                                 )}
                                                 className="w-full border p-3"
@@ -1486,7 +1687,9 @@ function CreateOrder() {
                                                 htmlFor="name_on_card"
                                                 className="mb-2 block font-bold"
                                             >
-                                                Name on Card
+                                                {t(
+                                                    "createOrder.nameOnCard"
+                                                )}
                                             </label>
 
                                             <input
@@ -1497,7 +1700,9 @@ function CreateOrder() {
                                                     "name_on_card",
                                                     {
                                                         required:
-                                                            "Name on card is required",
+                                                            t(
+                                                                "createOrder.nameOnCardRequired"
+                                                            ),
                                                     }
                                                 )}
                                                 className="w-full border p-3"
@@ -1524,10 +1729,20 @@ function CreateOrder() {
                                             className="bg-[#23856d] px-5 py-3 font-bold text-white disabled:opacity-50"
                                         >
                                             {isCardSubmitting
-                                                ? "Saving..."
+                                                ? t(
+                                                    "common.saving",
+                                                    {
+                                                        defaultValue:
+                                                            "Saving...",
+                                                    }
+                                                )
                                                 : editingCard
-                                                    ? "Update Card"
-                                                    : "Save Card"}
+                                                    ? t(
+                                                        "createOrder.updateCard"
+                                                    )
+                                                    : t(
+                                                        "createOrder.saveCard"
+                                                    )}
                                         </button>
 
                                         <button
@@ -1537,20 +1752,26 @@ function CreateOrder() {
                                             }
                                             className="border px-5 py-3 font-bold"
                                         >
-                                            Cancel
+                                            {t(
+                                                "common.cancel"
+                                            )}
                                         </button>
                                     </div>
                                 </form>
                             )}
 
                             <h4 className="mb-4 text-lg font-bold">
-                                Saved Cards
+                                {t(
+                                    "createOrder.savedCards"
+                                )}
                             </h4>
 
                             {creditCards.length ===
                                 0 ? (
                                 <p>
-                                    No saved cards.
+                                    {t(
+                                        "createOrder.noSavedCards"
+                                    )}
                                 </p>
                             ) : (
                                 <div className="grid gap-4">
@@ -1603,7 +1824,9 @@ function CreateOrder() {
                                                             }
                                                             className="border px-3 py-2 text-sm font-bold"
                                                         >
-                                                            Select
+                                                            {t(
+                                                                "common.select"
+                                                            )}
                                                         </button>
 
                                                         <button
@@ -1615,7 +1838,9 @@ function CreateOrder() {
                                                             }
                                                             className="border px-3 py-2 text-sm font-bold"
                                                         >
-                                                            Edit
+                                                            {t(
+                                                                "common.edit"
+                                                            )}
                                                         </button>
 
                                                         <button
@@ -1627,7 +1852,9 @@ function CreateOrder() {
                                                             }
                                                             className="px-3 py-2 text-sm font-bold text-red-500"
                                                         >
-                                                            Delete
+                                                            {t(
+                                                                "common.delete"
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1645,7 +1872,9 @@ function CreateOrder() {
                                     className="mt-6 border p-5"
                                 >
                                     <h4 className="mb-4 text-lg font-bold">
-                                        Payment Option
+                                        {t(
+                                            "createOrder.paymentOption"
+                                        )}
                                     </h4>
 
                                     <p className="font-bold">
@@ -1675,7 +1904,9 @@ function CreateOrder() {
                                             htmlFor="card_ccv"
                                             className="mb-2 block font-bold"
                                         >
-                                            CCV
+                                            {t(
+                                                "createOrder.ccv"
+                                            )}
                                         </label>
 
                                         <input
@@ -1688,13 +1919,16 @@ function CreateOrder() {
                                                 "card_ccv",
                                                 {
                                                     required:
-                                                        "CCV is required",
-
+                                                        t(
+                                                            "createOrder.ccvRequired"
+                                                        ),
                                                     pattern:
                                                     {
                                                         value: /^[0-9]{3,4}$/,
                                                         message:
-                                                            "CCV must contain 3 or 4 digits",
+                                                            t(
+                                                                "createOrder.ccvDigits"
+                                                            ),
                                                     },
                                                 }
                                             )}
@@ -1715,7 +1949,9 @@ function CreateOrder() {
                                     <div className="mt-6 border-t pt-5">
                                         <div className="mb-4 flex justify-between text-lg font-bold">
                                             <span>
-                                                Total
+                                                {t(
+                                                    "createOrder.total"
+                                                )}
                                             </span>
 
                                             <span>
@@ -1733,9 +1969,19 @@ function CreateOrder() {
                                             }
                                             className="w-full bg-[#23a6f0] px-6 py-4 font-bold text-white disabled:opacity-50"
                                         >
-                                            {isOrdering
-                                                ? <><span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating Order...</>
-                                                : "Complete Order"}
+                                            {isOrdering ? (
+                                                <>
+                                                    <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+
+                                                    {t(
+                                                        "createOrder.creatingOrder"
+                                                    )}
+                                                </>
+                                            ) : (
+                                                t(
+                                                    "createOrder.completeOrder"
+                                                )
+                                            )}
                                         </button>
                                     </div>
                                 </form>
@@ -1749,7 +1995,9 @@ function CreateOrder() {
                             }
                             className="border px-6 py-3 font-bold"
                         >
-                            Back
+                            {t(
+                                "common.back"
+                            )}
                         </button>
                     </section>
                 )}

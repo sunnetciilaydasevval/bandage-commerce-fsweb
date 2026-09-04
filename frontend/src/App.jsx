@@ -11,6 +11,7 @@ import {
   useDispatch,
   useSelector,
 } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 import PageContent from "./layout/PageContent";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -43,6 +44,7 @@ import {
 function AppRoutes() {
   const dispatch = useDispatch();
   const initializationStarted = useRef(false);
+  const { t } = useTranslation();
 
   const authChecked = useSelector(
     (state) =>
@@ -90,7 +92,7 @@ function AppRoutes() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white font-['Montserrat',sans-serif]">
         <p className="text-sm font-bold text-[#737373]">
-          Loading...
+          {t("common.loading")}
         </p>
       </div>
     );

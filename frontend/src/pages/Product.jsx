@@ -1,43 +1,25 @@
 import { useEffect, useRef } from "react";
-import {
-    Link,
-    useParams,
-} from "react-router-dom";
-import {
-    ArrowLeft,
-    Heart,
-    ShoppingCart,
-} from "lucide-react";
-import {
-    useDispatch,
-    useSelector,
-} from "react-redux";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Heart, ShoppingCart } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 import { fetchProduct } from "../redux/thunks/productThunk";
-
 import { addToCart } from "../redux/actions/shoppingCartActions";
-
-import {
-    toggleFavorite,
-} from "../redux/actions/favoriteActions";
+import { toggleFavorite } from "../redux/actions/favoriteActions";
 
 export default function Product() {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const requestedProductId = useRef(null);
 
-    const {
-        product,
-        fetchState,
-    } = useSelector(
+    const { product, fetchState } = useSelector(
         (state) => state.product
     );
 
-    const favorites =
-        useSelector(
-            (state) =>
-                state.favorite?.favorites ||
-                []
-        );
+    const favorites = useSelector(
+        (state) => state.favorite?.favorites || []
+    );
 
     const {
         productId,
@@ -47,31 +29,27 @@ export default function Product() {
     } = useParams();
 
     useEffect(() => {
-        if (!productId || requestedProductId.current === productId) {
+        if (
+            !productId ||
+            requestedProductId.current === productId
+        ) {
             return;
         }
 
         requestedProductId.current = productId;
 
-        dispatch(
-            fetchProduct(productId)
-        );
+        dispatch(fetchProduct(productId));
     }, [dispatch, productId]);
 
-    const isFavorite =
-        Boolean(
-            product &&
-            favorites.some(
-                (favorite) =>
-                    favorite.id ===
-                    product.id
-            )
-        );
+    const isFavorite = Boolean(
+        product &&
+        favorites.some(
+            (favorite) => favorite.id === product.id
+        )
+    );
 
     const backUrl =
-        gender &&
-            categoryName &&
-            categoryId
+        gender && categoryName && categoryId
             ? `/shop/${gender}/${categoryName}/${categoryId}`
             : "/shop";
 
@@ -80,9 +58,7 @@ export default function Product() {
             return;
         }
 
-        dispatch(
-            addToCart(product)
-        );
+        dispatch(addToCart(product));
     };
 
     const handleFavorite = () => {
@@ -90,9 +66,7 @@ export default function Product() {
             return;
         }
 
-        dispatch(
-            toggleFavorite(product)
-        );
+        dispatch(toggleFavorite(product));
     };
 
     if (fetchState === "FETCHING") {
@@ -100,7 +74,7 @@ export default function Product() {
             <div className="flex min-h-[600px] items-center justify-center">
                 <div
                     className="h-12 w-12 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]"
-                    aria-label="Loading"
+                    aria-label={t("product.loading")}
                 />
             </div>
         );
@@ -110,15 +84,14 @@ export default function Product() {
         return (
             <div className="flex min-h-[600px] flex-col items-center justify-center gap-6">
                 <p className="text-red-500">
-                    Product could not be
-                    loaded.
+                    {t("product.loadError")}
                 </p>
 
                 <Link
                     to={backUrl}
                     className="bg-[#23a6f0] px-6 py-3 text-sm font-bold text-white"
                 >
-                    Back to Shop
+                    {t("product.backToShop")}
                 </Link>
             </div>
         );
@@ -138,6 +111,8 @@ export default function Product() {
         0
     );
 
+    const stock = Number(product.stock ?? 0);
+
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1050px]">
@@ -145,99 +120,77 @@ export default function Product() {
                     to={backUrl}
                     className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#737373] hover:text-[#23a6f0]"
                 >
-                    <ArrowLeft
-                        size={18}
-                    />
-
-                    Back to Shop
+                    <ArrowLeft size={18} />
+                    {t("product.backToShop")}
                 </Link>
 
                 <div className="grid gap-10 md:grid-cols-2">
                     <div className="overflow-hidden bg-[#f5f5f5]">
                         <img
                             src={image}
-                            alt={
-                                product.name ||
-                                "Product"
-                            }
+                            alt={product.name || t("product.title")}
                             className="h-full max-h-[650px] w-full object-cover"
                         />
                     </div>
 
                     <div className="flex flex-col justify-center">
                         <p className="mb-3 text-sm font-bold uppercase tracking-wide text-[#23a6f0]">
-                            Product
+                            {t("product.label")}
                         </p>
 
                         <h1 className="mb-5 text-3xl font-bold leading-tight">
-                            {
-                                product.name
-                            }
+                            {product.name}
                         </h1>
 
                         <p className="mb-6 text-xl font-bold text-[#23856d]">
-                            {price.toFixed(
-                                2
-                            )}{" "}
-                            ₺
+                            {price.toFixed(2)} ₺
                         </p>
 
                         <p className="mb-8 text-sm leading-6 text-[#737373]">
-                            {
-                                product.description
-                            }
+                            {product.description}
                         </p>
 
                         <div className="mb-8 grid grid-cols-2 gap-4 border-y border-[#eeeeee] py-6">
                             <div>
                                 <p className="mb-1 text-xs text-[#737373]">
-                                    Rating
+                                    {t("product.rating")}
                                 </p>
 
                                 <p className="font-bold">
                                     ⭐{" "}
                                     {Number(
-                                        product.rating ??
-                                        0
-                                    ).toFixed(
-                                        1
-                                    )}
+                                        product.rating ?? 0
+                                    ).toFixed(1)}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="mb-1 text-xs text-[#737373]">
-                                    Stock
+                                    {t("product.stock")}
                                 </p>
 
                                 <p className="font-bold">
-                                    {
-                                        product.stock
-                                    }
+                                    {product.stock}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="mb-1 text-xs text-[#737373]">
-                                    Sold
+                                    {t("product.sold")}
                                 </p>
 
                                 <p className="font-bold">
-                                    {
-                                        product.sell_count
-                                    }
+                                    {product.sell_count}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="mb-1 text-xs text-[#737373]">
-                                    Category ID
+                                    {t("product.categoryId")}
                                 </p>
 
                                 <p className="font-bold">
-                                    {
-                                        product.category_id
-                                    }
+                                    {product.category_id}
                                 </p>
                             </div>
                         </div>
@@ -245,40 +198,24 @@ export default function Product() {
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={
-                                    handleAddToCart
-                                }
-                                disabled={
-                                    Number(
-                                        product.stock ??
-                                        0
-                                    ) <= 0
-                                }
+                                onClick={handleAddToCart}
+                                disabled={stock <= 0}
                                 className="flex flex-1 items-center justify-center gap-2 bg-[#23a6f0] px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d91d0] disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                <ShoppingCart
-                                    size={
-                                        18
-                                    }
-                                />
+                                <ShoppingCart size={18} />
 
-                                {Number(
-                                    product.stock ??
-                                    0
-                                ) <= 0
-                                    ? "OUT OF STOCK"
-                                    : "ADD TO CART"}
+                                {stock <= 0
+                                    ? t("product.outOfStock")
+                                    : t("product.addToCart")}
                             </button>
 
                             <button
                                 type="button"
-                                onClick={
-                                    handleFavorite
-                                }
+                                onClick={handleFavorite}
                                 aria-label={
                                     isFavorite
-                                        ? "Remove from favorites"
-                                        : "Add to favorites"
+                                        ? t("product.removeFavorite")
+                                        : t("product.addFavorite")
                                 }
                                 className={`flex h-[54px] w-[54px] items-center justify-center border transition-all hover:scale-105 ${isFavorite
                                         ? "border-red-500 text-red-500"
@@ -286,9 +223,7 @@ export default function Product() {
                                     }`}
                             >
                                 <Heart
-                                    size={
-                                        21
-                                    }
+                                    size={21}
                                     fill={
                                         isFavorite
                                             ? "currentColor"

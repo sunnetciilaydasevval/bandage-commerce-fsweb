@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     Heart,
     ShoppingCart,
@@ -21,6 +22,7 @@ export default function ProductCard({
     product,
     productUrl,
 }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
 
     const favorites = useSelector(
@@ -110,8 +112,8 @@ export default function ProductCard({
                     onClick={handleFavorite}
                     aria-label={
                         isFavorite
-                            ? "Remove from favorites"
-                            : "Add to favorites"
+                            ? t("product.removeFromFavorites")
+                            : t("product.addToFavorites")
                     }
                     className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-all hover:scale-110 ${isFavorite
                             ? "text-red-500"
@@ -162,7 +164,8 @@ export default function ProductCard({
                         className="mt-3 flex w-full items-center justify-center gap-2 bg-[#23a6f0] px-3 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d91d0]"
                     >
                         <ShoppingCart size={16} />
-                        ADD TO CART
+
+                        {t("product.addToCart")}
                     </button>
                 ) : (
                     <div className="mt-3 flex h-11 w-full items-center border border-[#23a6f0]">
@@ -177,8 +180,8 @@ export default function ProductCard({
                             }
                             aria-label={
                                 cartCount === 1
-                                    ? "Remove from cart"
-                                    : "Decrease quantity"
+                                    ? t("product.removeFromCart")
+                                    : t("product.decreaseQuantity")
                             }
                             className="flex h-full w-10 items-center justify-center text-[#23a6f0] transition-colors hover:bg-[#f0f9ff]"
                         >
@@ -203,7 +206,9 @@ export default function ProductCard({
                         <button
                             type="button"
                             onClick={handleIncrease}
-                            aria-label="Increase quantity"
+                            aria-label={t(
+                                "product.increaseQuantity"
+                            )}
                             className="flex h-full w-10 items-center justify-center text-[#23a6f0] transition-colors hover:bg-[#f0f9ff]"
                         >
                             <Plus size={16} />

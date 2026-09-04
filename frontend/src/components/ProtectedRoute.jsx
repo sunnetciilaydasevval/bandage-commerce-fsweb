@@ -1,8 +1,10 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 function ProtectedRoute({ children }) {
     const location = useLocation();
+    const { t } = useTranslation();
 
     const authChecked = useSelector(
         (state) =>
@@ -22,7 +24,7 @@ function ProtectedRoute({ children }) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center bg-white">
                 <p className="text-sm font-bold text-[#737373]">
-                    Loading...
+                    {t("common.loading")}
                 </p>
             </div>
         );

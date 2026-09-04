@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
     CircleUserRound,
     Camera,
@@ -26,7 +27,9 @@ const phoneDisplay = "(225) 555-0118";
 const email = "michelle.rivera@example.com";
 
 export default function Contact() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -78,31 +81,29 @@ export default function Contact() {
             <section className="mx-auto flex max-w-[1050px] flex-col items-center gap-8 px-6 py-16 md:flex-row md:justify-between md:py-24">
                 <div className="max-w-[330px] text-center md:text-left">
                     <p className="mb-5 text-xs font-bold">
-                        CONTACT US
+                        {t("contact.eyebrow")}
                     </p>
 
                     <h1 className="mb-5 text-[40px] font-bold leading-[50px]">
-                        Get in touch today!
+                        {t("contact.title")}
                     </h1>
 
                     <p className="mb-5 text-sm leading-5 text-[#737373]">
-                        We know how large objects will act, but
-                        things on a small scale just do not act
-                        that way.
+                        {t("contact.heroDescription")}
                     </p>
 
                     <a
                         href={`tel:${phoneNumber}`}
                         className="mb-2 block text-sm font-bold transition-colors hover:text-[#23a6f0]"
                     >
-                        Phone : {phoneDisplay}
+                        {t("contact.phoneLabel")} : {phoneDisplay}
                     </a>
 
                     <a
                         href={`mailto:${email}`}
                         className="mb-5 block text-sm font-bold transition-colors hover:text-[#23a6f0]"
                     >
-                        Email : {email}
+                        {t("contact.emailLabel")} : {email}
                     </a>
 
                     <div className="flex justify-center gap-5 md:justify-start">
@@ -150,7 +151,7 @@ export default function Contact() {
 
                 <img
                     src={contactHero}
-                    alt="Family shopping"
+                    alt={t("contact.heroImageAlt")}
                     className="w-full max-w-[470px] object-contain"
                 />
             </section>
@@ -158,11 +159,11 @@ export default function Contact() {
             {/* CONTACT METHODS */}
             <section className="bg-[#fafafa] px-6 py-16">
                 <p className="mb-3 text-center text-xs font-bold">
-                    VISIT OUR OFFICE
+                    {t("contact.officeEyebrow")}
                 </p>
 
                 <h2 className="mx-auto mb-12 max-w-[400px] text-center text-[30px] font-bold leading-9">
-                    We help small businesses with big ideas
+                    {t("contact.officeTitle")}
                 </h2>
 
                 <div className="mx-auto flex max-w-[900px] flex-col justify-center gap-8 md:flex-row">
@@ -176,18 +177,18 @@ export default function Contact() {
                         <p className="text-xs font-bold">
                             {phoneDisplay}
                             <br />
-                            Call us directly
+                            {t("contact.callDirectly")}
                         </p>
 
                         <strong className="text-sm">
-                            Get Support
+                            {t("contact.getSupport")}
                         </strong>
 
                         <a
                             href={`tel:${phoneNumber}`}
                             className="rounded-full border border-[#23a6f0] px-5 py-2 text-xs text-[#23a6f0] transition-colors hover:bg-[#23a6f0] hover:text-white"
                         >
-                            Call Now
+                            {t("contact.callNow")}
                         </a>
                     </div>
 
@@ -201,18 +202,18 @@ export default function Contact() {
                         <p className="text-xs font-bold">
                             {email}
                             <br />
-                            We reply as soon as possible
+                            {t("contact.emailReply")}
                         </p>
 
                         <strong className="text-sm">
-                            Get Support
+                            {t("contact.getSupport")}
                         </strong>
 
                         <a
                             href={`mailto:${email}`}
                             className="rounded-full border border-[#23a6f0] px-5 py-2 text-xs text-[#23a6f0] transition-colors hover:bg-[#23a6f0] hover:text-white"
                         >
-                            Send Email
+                            {t("contact.sendEmail")}
                         </a>
                     </div>
 
@@ -224,13 +225,13 @@ export default function Contact() {
                         />
 
                         <p className="text-xs font-bold">
-                            Visit our office
+                            {t("contact.visitOffice")}
                             <br />
-                            Contact us for directions
+                            {t("contact.directions")}
                         </p>
 
                         <strong className="text-sm">
-                            Our Location
+                            {t("contact.ourLocation")}
                         </strong>
 
                         <a
@@ -239,7 +240,7 @@ export default function Contact() {
                             rel="noopener noreferrer"
                             className="rounded-full border border-[#23a6f0] px-5 py-2 text-xs text-[#23a6f0] transition-colors hover:bg-[#23a6f0] hover:text-white"
                         >
-                            View Map
+                            {t("contact.viewMap")}
                         </a>
                     </div>
                 </div>
@@ -251,11 +252,11 @@ export default function Contact() {
                     <Send className="mx-auto mb-5 text-[#23a6f0]" />
 
                     <p className="mb-3 text-xs font-bold">
-                        SEND US A MESSAGE
+                        {t("contact.formEyebrow")}
                     </p>
 
                     <h2 className="text-[32px] font-bold">
-                        Let's Talk
+                        {t("contact.formTitle")}
                     </h2>
                 </div>
 
@@ -264,8 +265,7 @@ export default function Contact() {
                         role="status"
                         className="mb-6 rounded-md bg-green-50 px-5 py-4 text-center text-sm font-bold text-green-700"
                     >
-                        Thank you! Your message has been
-                        received successfully.
+                        {t("contact.successMessage")}
                     </div>
                 )}
 
@@ -278,7 +278,7 @@ export default function Contact() {
                             htmlFor="name"
                             className="mb-2 block text-xs font-bold"
                         >
-                            Name
+                            {t("contact.name")}
                         </label>
 
                         <input
@@ -287,7 +287,7 @@ export default function Contact() {
                             type="text"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder="Your name"
+                            placeholder={t("contact.yourName")}
                             required
                             className="w-full rounded-md border border-[#dddddd] px-4 py-3 text-sm outline-none transition-colors focus:border-[#23a6f0]"
                         />
@@ -298,7 +298,7 @@ export default function Contact() {
                             htmlFor="email"
                             className="mb-2 block text-xs font-bold"
                         >
-                            Email
+                            {t("contact.email")}
                         </label>
 
                         <input
@@ -307,7 +307,7 @@ export default function Contact() {
                             type="email"
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder="Your email"
+                            placeholder={t("contact.yourEmail")}
                             required
                             className="w-full rounded-md border border-[#dddddd] px-4 py-3 text-sm outline-none transition-colors focus:border-[#23a6f0]"
                         />
@@ -318,7 +318,7 @@ export default function Contact() {
                             htmlFor="message"
                             className="mb-2 block text-xs font-bold"
                         >
-                            Message
+                            {t("contact.message")}
                         </label>
 
                         <textarea
@@ -326,7 +326,7 @@ export default function Contact() {
                             name="message"
                             value={formData.message}
                             onChange={handleChange}
-                            placeholder="How can we help?"
+                            placeholder={t("contact.howCanWeHelp")}
                             rows={6}
                             required
                             className="w-full resize-none rounded-md border border-[#dddddd] px-4 py-3 text-sm outline-none transition-colors focus:border-[#23a6f0]"
@@ -337,7 +337,7 @@ export default function Contact() {
                         type="submit"
                         className="w-full bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-opacity hover:opacity-90"
                     >
-                        Submit
+                        {t("contact.submit")}
                     </button>
                 </form>
             </section>
@@ -352,11 +352,11 @@ export default function Contact() {
                 </div>
 
                 <p className="mb-3 text-xs font-bold">
-                    WE CAN'T WAIT TO MEET YOU
+                    {t("contact.bottomEyebrow")}
                 </p>
 
                 <h2 className="mb-5 text-[32px] font-bold">
-                    Let's Talk
+                    {t("contact.bottomTitle")}
                 </h2>
 
                 <button
@@ -364,7 +364,7 @@ export default function Contact() {
                     onClick={handleTryItFree}
                     className="bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-opacity hover:opacity-90"
                 >
-                    Try it free now
+                    {t("contact.tryItFree")}
                 </button>
             </section>
         </div>

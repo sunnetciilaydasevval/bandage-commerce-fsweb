@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 import { getGravatarUrl } from "../utils/gravatar";
 
@@ -14,6 +15,7 @@ import {
     X,
     ChevronDown,
     LogOut,
+    Languages,
 } from "lucide-react";
 
 import { logoutUser } from "../redux/thunks/clientThunks";
@@ -25,12 +27,12 @@ import {
     FaTwitter,
 } from "react-icons/fa";
 
-const navItems = [
-    ["Home", "/"],
-    ["Shop", "/shop"],
-    ["Contact", "/contact"],
-    ["Team", "/team"],
-    ["About", "/about"],
+const navItemKeys = [
+    ["navigation.home", "/"],
+    ["navigation.shop", "/shop"],
+    ["navigation.contact", "/contact"],
+    ["navigation.team", "/team"],
+    ["navigation.about", "/about"],
 ];
 
 function createCategoryUrl(category) {
@@ -55,6 +57,7 @@ function createCategoryUrl(category) {
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] =
         useState(false);
@@ -134,7 +137,7 @@ export default function Header() {
         user?.name ||
         user?.username ||
         user?.email ||
-        "Account";
+        t("common.account");
 
     const cartCount = cart.reduce(
         (total, item) =>
@@ -200,7 +203,22 @@ export default function Header() {
         navigate("/");
     };
 
-    const closeCart = () => setIsCartOpen(false);
+    const closeCart = () =>
+        setIsCartOpen(false);
+
+    const toggleLanguage = () => {
+        const nextLanguage =
+            i18n.language === "tr"
+                ? "en"
+                : "tr";
+
+        i18n.changeLanguage(nextLanguage);
+    };
+
+    const currentLanguage =
+        i18n.language === "tr"
+            ? "TR"
+            : "EN";
 
     return (
         <header className="w-full bg-white font-['Montserrat',sans-serif]">
@@ -229,13 +247,13 @@ export default function Header() {
                 </div>
 
                 <p>
-                    Follow Us and get a chance to win 80% off
+                    {t("header.followUs")}
                 </p>
 
                 <div className="hidden items-center gap-2 lg:flex">
 
                     <span>
-                        Follow Us :
+                        {t("header.followUsLabel")} :
                     </span>
 
                     <a
@@ -297,14 +315,14 @@ export default function Header() {
                 {/* DESKTOP NAV */}
                 <div className="hidden items-center gap-5 lg:flex">
 
-                    {navItems.map(
-                        ([label, href]) => (
+                    {navItemKeys.map(
+                        ([keyLabel, href]) => (
                             <Link
-                                key={label}
+                                key={href}
                                 to={href}
                                 className="text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] transition-colors hover:text-[#23a6f0]"
                             >
-                                {label}
+                                {t(keyLabel)}
                             </Link>
                         )
                     )}
@@ -330,13 +348,13 @@ export default function Header() {
                             }
                             className="flex items-center gap-1 text-[14px] font-bold leading-6 tracking-[0.2px] text-[#737373] transition-colors hover:text-[#23a6f0]"
                         >
-                            Categories
+                            {t("navigation.categories")}
 
                             <ChevronDown
                                 size={15}
                                 className={`transition-transform ${isCategoryOpen
-                                    ? "rotate-180"
-                                    : ""
+                                        ? "rotate-180"
+                                        : ""
                                     }`}
                             />
                         </button>
@@ -349,7 +367,7 @@ export default function Header() {
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
-                                            Kadın
+                                            {t("gender.women")}
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
@@ -384,7 +402,7 @@ export default function Header() {
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
-                                            Erkek
+                                            {t("gender.men")}
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
@@ -428,6 +446,27 @@ export default function Header() {
                 {/* DESKTOP ACTIONS */}
                 <div className="hidden items-center gap-1 lg:flex">
 
+                    {/* LANGUAGE */}
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={
+                            currentLanguage === "TR"
+                                ? "Switch to English"
+                                : "Türkçeye geç"
+                        }
+                        className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[12px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
+                    >
+                        <Languages
+                            size={17}
+                            strokeWidth={2}
+                        />
+
+                        <span>
+                            {currentLanguage}
+                        </span>
+                    </button>
+
                     {/* ACCOUNT */}
                     {isLoggedIn ? (
                         <div className="relative">
@@ -462,8 +501,8 @@ export default function Header() {
                                 <ChevronDown
                                     size={15}
                                     className={`transition-transform ${isUserMenuOpen
-                                        ? "rotate-180"
-                                        : ""
+                                            ? "rotate-180"
+                                            : ""
                                         }`}
                                 />
                             </button>
@@ -480,7 +519,7 @@ export default function Header() {
                                         }
                                         className="block px-4 py-3 text-sm font-bold text-[#737373] transition-colors hover:bg-[#f5f5f5] hover:text-[#23a6f0]"
                                     >
-                                        Previous Orders
+                                        {t("orders.previousOrders")}
                                     </Link>
 
                                     <button
@@ -489,7 +528,7 @@ export default function Header() {
                                         className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-bold text-[#737373] transition-colors hover:bg-[#f5f5f5] hover:text-[#e74040]"
                                     >
                                         <LogOut size={16} />
-                                        Logout
+                                        {t("auth.logout")}
                                     </button>
 
                                 </div>
@@ -502,14 +541,14 @@ export default function Header() {
                                 to="/login"
                                 className="rounded-full p-3 text-[14px] font-bold text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                             >
-                                Login
+                                {t("auth.login")}
                             </Link>
 
                             <Link
                                 to="/signup"
                                 className="rounded-full bg-[#23a6f0] px-5 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#1d96dc]"
                             >
-                                Sign Up
+                                {t("auth.signup")}
                             </Link>
                         </>
                     )}
@@ -529,7 +568,7 @@ export default function Header() {
                                     )
                                 }
                                 autoFocus
-                                placeholder="Search products..."
+                                placeholder={t("shop.searchProducts")}
                                 className="w-48 rounded-full border border-[#ececec] px-4 py-2 text-sm text-[#252b42] outline-none focus:border-[#23a6f0]"
                             />
 
@@ -555,44 +594,104 @@ export default function Header() {
 
                     {/* CART */}
                     <div className="relative">
+
                         <button
                             type="button"
                             aria-label="Shopping cart"
                             aria-expanded={isCartOpen}
-                            onClick={() => setIsCartOpen((current) => !current)}
+                            onClick={() =>
+                                setIsCartOpen(
+                                    (current) =>
+                                        !current
+                                )
+                            }
                             className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                         >
                             <ShoppingCart size={18} />
-                            <span className="text-xs">{cartCount}</span>
+
+                            <span className="text-xs">
+                                {cartCount}
+                            </span>
                         </button>
 
                         {isCartOpen && (
                             <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-md border border-[#eeeeee] bg-white p-4 shadow-lg">
-                                <h3 className="mb-3 text-sm font-bold text-[#252b42]">Cart</h3>
+
+                                <h3 className="mb-3 text-sm font-bold text-[#252b42]">
+                                    {t("navigation.cart")}
+                                </h3>
+
                                 {cart.length === 0 ? (
-                                    <p className="py-4 text-sm text-[#737373]">Your cart is empty.</p>
+                                    <p className="py-4 text-sm text-[#737373]">
+                                        {t("cart.empty")}
+                                    </p>
                                 ) : (
                                     <div className="flex max-h-64 flex-col gap-3 overflow-y-auto">
-                                        {cart.slice(0, 4).map((item) => (
-                                            <div key={item.product.id} className="flex items-center gap-3">
-                                                <img src={item.product?.images?.[0]?.url} alt="" className="h-12 w-10 object-cover" />
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-xs font-bold text-[#252b42]">{item.product?.name}</p>
-                                                    <p className="text-xs text-[#737373]">Qty: {item.count}</p>
+
+                                        {cart.slice(0, 4).map(
+                                            (item) => (
+                                                <div
+                                                    key={
+                                                        item
+                                                            .product
+                                                            .id
+                                                    }
+                                                    className="flex items-center gap-3"
+                                                >
+                                                    <img
+                                                        src={
+                                                            item
+                                                                .product
+                                                                ?.images?.[0]
+                                                                ?.url
+                                                        }
+                                                        alt=""
+                                                        className="h-12 w-10 object-cover"
+                                                    />
+
+                                                    <div className="min-w-0 flex-1">
+
+                                                        <p className="truncate text-xs font-bold text-[#252b42]">
+                                                            {
+                                                                item
+                                                                    .product
+                                                                    ?.name
+                                                            }
+                                                        </p>
+
+                                                        <p className="text-xs text-[#737373]">
+                                                            {t("cart.quantity")}:{" "}
+                                                            {
+                                                                item.count
+                                                            }
+                                                        </p>
+
+                                                    </div>
+
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        )}
+
                                     </div>
                                 )}
-                                <Link to="/cart" onClick={closeCart} className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white">View Cart</Link>
+
+                                <Link
+                                    to="/cart"
+                                    onClick={closeCart}
+                                    className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white"
+                                >
+                                    {t("navigation.cart")}
+                                </Link>
+
                             </div>
                         )}
+
                     </div>
 
                     {/* FAVORITES */}
                     <Link
                         to="/favorites"
-                        aria-label="Favorites"
+                        aria-label={t("navigation.favorites")}
                         className="flex items-center gap-1 rounded-full p-3 text-[#23a6f0] transition-colors hover:bg-[#f5f5f5]"
                     >
                         <Heart
@@ -614,6 +713,27 @@ export default function Header() {
                 {/* MOBILE ACTIONS */}
                 <div className="flex items-center gap-5 lg:hidden">
 
+                    {/* LANGUAGE */}
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        aria-label={
+                            currentLanguage === "TR"
+                                ? "Switch to English"
+                                : "Türkçeye geç"
+                        }
+                        className="flex items-center gap-1 text-[11px] font-bold text-[#252b42]"
+                    >
+                        <Languages
+                            size={19}
+                            strokeWidth={2}
+                        />
+
+                        <span>
+                            {currentLanguage}
+                        </span>
+                    </button>
+
                     {/* SEARCH */}
                     {isSearchOpen ? (
                         <form
@@ -629,7 +749,7 @@ export default function Header() {
                                     )
                                 }
                                 autoFocus
-                                placeholder="Search products..."
+                                placeholder={t("shop.searchProducts")}
                                 className="min-w-0 flex-1 rounded-full border border-[#ececec] px-4 py-3 text-sm text-[#252b42] outline-none focus:border-[#23a6f0]"
                             />
 
@@ -645,7 +765,7 @@ export default function Header() {
                     ) : (
                         <button
                             type="button"
-                            aria-label="Search"
+                            aria-label={t("navigation.search")}
                             onClick={openSearch}
                             className="p-0 text-[#252b42]"
                         >
@@ -656,9 +776,14 @@ export default function Header() {
                     {/* CART */}
                     <button
                         type="button"
-                        aria-label="Shopping cart"
+                        aria-label={t("navigation.cart")}
                         aria-expanded={isCartOpen}
-                        onClick={() => setIsCartOpen((current) => !current)}
+                        onClick={() =>
+                            setIsCartOpen(
+                                (current) =>
+                                    !current
+                            )
+                        }
                         className="relative p-0 text-[#252b42]"
                     >
                         <ShoppingCart size={22} />
@@ -673,7 +798,7 @@ export default function Header() {
                     {/* FAVORITES */}
                     <Link
                         to="/favorites"
-                        aria-label="Favorites"
+                        aria-label={t("navigation.favorites")}
                         className="relative p-0 text-[#252b42]"
                     >
                         <Heart size={22} />
@@ -715,23 +840,74 @@ export default function Header() {
 
                 {isCartOpen && (
                     <div className="absolute right-4 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-[#eeeeee] bg-white p-4 shadow-lg lg:hidden">
-                        <h3 className="mb-3 text-sm font-bold text-[#252b42]">Cart</h3>
+
+                        <h3 className="mb-3 text-sm font-bold text-[#252b42]">
+                            {t("navigation.cart")}
+                        </h3>
+
                         {cart.length === 0 ? (
-                            <p className="py-4 text-sm text-[#737373]">Your cart is empty.</p>
+                            <p className="py-4 text-sm text-[#737373]">
+                                {t("cart.empty")}
+                            </p>
                         ) : (
                             <div className="flex max-h-56 flex-col gap-3 overflow-y-auto">
-                                {cart.slice(0, 4).map((item) => (
-                                    <div key={item.product.id} className="flex items-center gap-3">
-                                        <img src={item.product?.images?.[0]?.url} alt="" className="h-12 w-10 object-cover" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-xs font-bold text-[#252b42]">{item.product?.name}</p>
-                                            <p className="text-xs text-[#737373]">Qty: {item.count}</p>
+
+                                {cart.slice(0, 4).map(
+                                    (item) => (
+                                        <div
+                                            key={
+                                                item
+                                                    .product
+                                                    .id
+                                            }
+                                            className="flex items-center gap-3"
+                                        >
+
+                                            <img
+                                                src={
+                                                    item
+                                                        .product
+                                                        ?.images?.[0]
+                                                        ?.url
+                                                }
+                                                alt=""
+                                                className="h-12 w-10 object-cover"
+                                            />
+
+                                            <div className="min-w-0 flex-1">
+
+                                                <p className="truncate text-xs font-bold text-[#252b42]">
+                                                    {
+                                                        item
+                                                            .product
+                                                            ?.name
+                                                    }
+                                                </p>
+
+                                                <p className="text-xs text-[#737373]">
+                                                    {t("cart.quantity")}:{" "}
+                                                    {
+                                                        item.count
+                                                    }
+                                                </p>
+
+                                            </div>
+
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                )}
+
                             </div>
                         )}
-                        <Link to="/cart" onClick={closeCart} className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white">View Cart</Link>
+
+                        <Link
+                            to="/cart"
+                            onClick={closeCart}
+                            className="mt-4 block bg-[#23a6f0] px-4 py-3 text-center text-xs font-bold text-white"
+                        >
+                            {t("navigation.cart")}
+                        </Link>
+
                     </div>
                 )}
 
@@ -754,7 +930,7 @@ export default function Header() {
                                     }
                                     className="rounded-full px-4 py-2 text-[24px] leading-8 text-[#23a6f0]"
                                 >
-                                    Login
+                                    {t("auth.login")}
                                 </Link>
 
                                 <Link
@@ -764,7 +940,7 @@ export default function Header() {
                                     }
                                     className="rounded-full bg-[#23a6f0] px-5 py-2 text-[24px] leading-8 text-white transition-colors hover:bg-[#1d96dc]"
                                 >
-                                    Sign Up
+                                    {t("auth.signup")}
                                 </Link>
 
                             </div>
@@ -772,12 +948,13 @@ export default function Header() {
 
                         {isLoggedIn && (
                             <div className="flex flex-col items-center gap-4">
+
                                 <Link
                                     to="/orders"
                                     onClick={closeMobileMenu}
                                     className="text-[24px] leading-8 text-[#23a6f0]"
                                 >
-                                    Previous Orders
+                                    {t("orders.previousOrders")}
                                 </Link>
 
                                 <button
@@ -786,23 +963,24 @@ export default function Header() {
                                     className="flex items-center gap-2 text-[20px] font-bold text-[#e74040]"
                                 >
                                     <LogOut size={18} />
-                                    Logout
+                                    {t("auth.logout")}
                                 </button>
+
                             </div>
                         )}
 
                         {/* NAV ITEMS */}
-                        {navItems.map(
-                            ([label, href]) => (
+                        {navItemKeys.map(
+                            ([keyLabel, href]) => (
                                 <Link
-                                    key={label}
+                                    key={href}
                                     to={href}
                                     onClick={
                                         closeMobileMenu
                                     }
                                     className="text-[24px] leading-8 text-[#737373] transition-colors hover:text-[#23a6f0]"
                                 >
-                                    {label}
+                                    {t(keyLabel)}
                                 </Link>
                             )
                         )}
@@ -820,13 +998,13 @@ export default function Header() {
                                 }
                                 className="mx-auto flex items-center gap-2 text-[24px] leading-8 text-[#737373]"
                             >
-                                Categories
+                                {t("navigation.categories")}
 
                                 <ChevronDown
                                     size={20}
                                     className={`transition-transform ${mobileCategoryOpen
-                                        ? "rotate-180"
-                                        : ""
+                                            ? "rotate-180"
+                                            : ""
                                         }`}
                                 />
                             </button>
@@ -837,7 +1015,7 @@ export default function Header() {
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
-                                            Kadın
+                                            {t("gender.women")}
                                         </h3>
 
                                         <div className="flex flex-col gap-3">
@@ -870,7 +1048,7 @@ export default function Header() {
                                     <div>
 
                                         <h3 className="mb-4 text-sm font-bold text-[#252b42]">
-                                            Erkek
+                                            {t("gender.men")}
                                         </h3>
 
                                         <div className="flex flex-col gap-3">

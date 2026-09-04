@@ -4,6 +4,7 @@ import {
 } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 import {
     increaseCartItem,
@@ -13,6 +14,8 @@ import {
 } from "../redux/thunks/shoppingCartThunk";
 
 export default function ShoppingCart() {
+    const { t } = useTranslation();
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -75,28 +78,25 @@ export default function ShoppingCart() {
     const handleCreateOrder = () => {
         if (selectedItems.length === 0) {
             toast.info(
-                "Please select at least one product."
+                t("cart.selectAtLeastOne")
             );
 
             return;
         }
 
-        navigate(
-            "/create-order"
-        );
+        navigate("/create-order");
     };
 
     return (
         <main className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
             <div className="mx-auto max-w-[1200px]">
                 <h1 className="mb-10 text-3xl font-bold">
-                    Shopping Cart
+                    {t("cart.title")}
                 </h1>
 
                 {cart.length === 0 ? (
                     <div className="py-20 text-center text-[#737373]">
-                        Your shopping cart is
-                        empty.
+                        {t("cart.empty")}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_350px] lg:items-start">
@@ -105,36 +105,34 @@ export default function ShoppingCart() {
                                 <thead>
                                     <tr className="border-b border-[#eeeeee] text-left text-sm">
                                         <th className="p-4">
-                                            Select
+                                            {t("cart.select")}
                                         </th>
 
                                         <th className="p-4">
-                                            Product
+                                            {t("cart.product")}
                                         </th>
 
                                         <th className="p-4">
-                                            Price
+                                            {t("cart.price")}
                                         </th>
 
                                         <th className="p-4">
-                                            Quantity
+                                            {t("cart.quantity")}
                                         </th>
 
                                         <th className="p-4">
-                                            Total
+                                            {t("cart.total")}
                                         </th>
 
                                         <th className="p-4">
-                                            Action
+                                            {t("cart.action")}
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     {cart.map(
-                                        (
-                                            item
-                                        ) => {
+                                        (item) => {
                                             const product =
                                                 item.product;
 
@@ -176,7 +174,13 @@ export default function ShoppingCart() {
                                                                     )
                                                                 )
                                                             }
-                                                            aria-label={`Select ${product.name}`}
+                                                            aria-label={t(
+                                                                "cart.selectProduct",
+                                                                {
+                                                                    product:
+                                                                        product.name,
+                                                                }
+                                                            )}
                                                         />
                                                     </td>
 
@@ -220,7 +224,9 @@ export default function ShoppingCart() {
                                                                     )
                                                                 }
                                                                 className="h-8 w-8 border"
-                                                                aria-label="Decrease quantity"
+                                                                aria-label={t(
+                                                                    "cart.decreaseQuantity"
+                                                                )}
                                                             >
                                                                 -
                                                             </button>
@@ -241,7 +247,9 @@ export default function ShoppingCart() {
                                                                     )
                                                                 }
                                                                 className="h-8 w-8 border"
-                                                                aria-label="Increase quantity"
+                                                                aria-label={t(
+                                                                    "cart.increaseQuantity"
+                                                                )}
                                                             >
                                                                 +
                                                             </button>
@@ -266,7 +274,9 @@ export default function ShoppingCart() {
                                                             }
                                                             className="text-sm font-bold text-red-500 hover:text-red-700"
                                                         >
-                                                            Remove
+                                                            {t(
+                                                                "cart.remove"
+                                                            )}
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -282,8 +292,9 @@ export default function ShoppingCart() {
                                             className="p-6 text-right"
                                         >
                                             <span className="mr-4 text-sm font-bold text-[#737373]">
-                                                Selected
-                                                Total:
+                                                {t(
+                                                    "cart.selectedTotal"
+                                                )}
                                             </span>
 
                                             <span className="text-xl font-bold text-[#23856d]">
@@ -299,14 +310,17 @@ export default function ShoppingCart() {
 
                         <aside className="w-full rounded-md border border-[#e6e6e6] bg-[#f9f9f9] p-8">
                             <h2 className="mb-8 text-2xl font-bold">
-                                Order Summary
+                                {t(
+                                    "cart.orderSummary"
+                                )}
                             </h2>
 
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-sm font-semibold text-[#737373]">
-                                        Products
-                                        Total
+                                        {t(
+                                            "cart.productsTotal"
+                                        )}
                                     </span>
 
                                     <span className="text-sm font-bold">
@@ -318,7 +332,9 @@ export default function ShoppingCart() {
 
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-sm font-semibold text-[#737373]">
-                                        Shipping
+                                        {t(
+                                            "cart.shipping"
+                                        )}
                                     </span>
 
                                     <span className="text-sm font-bold">
@@ -330,7 +346,9 @@ export default function ShoppingCart() {
 
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-sm font-semibold text-[#737373]">
-                                        Discount
+                                        {t(
+                                            "cart.discount"
+                                        )}
                                     </span>
 
                                     <span className="text-sm font-bold">
@@ -344,8 +362,9 @@ export default function ShoppingCart() {
                                 <div className="border-t border-[#dddddd] pt-5">
                                     <div className="flex items-center justify-between gap-4">
                                         <span className="text-base font-bold">
-                                            Grand
-                                            Total
+                                            {t(
+                                                "cart.grandTotal"
+                                            )}
                                         </span>
 
                                         <span className="text-xl font-bold text-[#23856d]">
@@ -367,8 +386,9 @@ export default function ShoppingCart() {
                                     }
                                     className="mt-4 w-full rounded-md bg-[#23856d] px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-[#1d705c] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Create
-                                    Order
+                                    {t(
+                                        "cart.createOrder"
+                                    )}
                                 </button>
                             </div>
                         </aside>

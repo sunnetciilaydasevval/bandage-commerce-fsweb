@@ -7,8 +7,10 @@ import {
     useParams,
     useSearchParams,
 } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import ProductCard from "../components/ProductCard";
+
 import {
     fetchProducts,
 } from "../redux/thunks/productThunk";
@@ -29,6 +31,8 @@ function createSlug(value = "") {
 }
 
 export default function Shop() {
+    const { t } = useTranslation();
+
     const dispatch = useDispatch();
 
     const {
@@ -43,16 +47,23 @@ export default function Shop() {
     ] = useSearchParams();
 
     const {
-        productList,
-        total,
+        productList = [],
+        total = 0,
         fetchState,
     } = useSelector(
         (state) => state.product
     );
 
-    const filter = searchParams.get("filter") || "";
-    const sort = searchParams.get("sort") || "";
-    const currentPage = Number(searchParams.get("page")) || 1;
+    const filter =
+        searchParams.get("filter") || "";
+
+    const sort =
+        searchParams.get("sort") || "";
+
+    const currentPage =
+        Number(
+            searchParams.get("page")
+        ) || 1;
 
     const limit = 25;
 
@@ -67,10 +78,6 @@ export default function Shop() {
         total / limit
     );
 
-    /*
-     * Category / filter / sort / page
-     * değiştiğinde ürünleri tekrar çek.
-     */
     useEffect(() => {
         dispatch(
             fetchProducts({
@@ -180,8 +187,8 @@ export default function Shop() {
         let endPage = Math.min(
             totalPages,
             startPage +
-            maxVisiblePages -
-            1
+                maxVisiblePages -
+                1
         );
 
         if (
@@ -191,8 +198,8 @@ export default function Shop() {
             startPage = Math.max(
                 1,
                 endPage -
-                maxVisiblePages +
-                1
+                    maxVisiblePages +
+                    1
             );
         }
 
@@ -207,43 +214,63 @@ export default function Shop() {
         return pages;
     };
 
+    const getProductUrl = (
+        product
+    ) => {
+        const productSlug =
+            createSlug(
+                product.name
+            );
+
+        if (categoryId) {
+            return `/shop/${gender}/${categoryName}/${categoryId}/${productSlug}/${product.id}`;
+        }
+
+        return `/product/${productSlug}/${product.id}`;
+    };
+
     return (
         <div className="min-h-screen bg-white px-6 py-12 font-['Montserrat',sans-serif] text-[#252b42]">
-
             <div className="mx-auto max-w-[1050px]">
-
-                {/* HEADER */}
+                {/* PAGE INTRO */}
                 <div className="mb-10 text-center">
-
                     <h1 className="mb-3 text-[24px] font-bold">
-                        SHOP
+                        {t("shop.title")}
                     </h1>
 
                     <p className="text-sm text-[#737373]">
-                        Explore our products
+                        {t(
+                            "shop.description"
+                        )}
                     </p>
-
                 </div>
 
-                {/* FILTER / SORT */}
+                {/* FILTERS */}
                 <div className="mb-10 flex flex-col gap-4 border-y border-[#ececec] py-6 md:flex-row md:items-center md:justify-between">
-
                     <p className="text-sm font-bold text-[#737373]">
-                        Showing{" "}
-                        {productList.length}{" "}
-                        of{" "}
-                        {total} results
+                        {t(
+                            "shop.showingResults",
+                            {
+                                count:
+                                    productList.length,
+                                total,
+                            }
+                        )}
                     </p>
 
                     <div className="flex flex-col gap-3 sm:flex-row">
-
                         <input
                             type="text"
                             value={filter}
                             onChange={
                                 handleFilterChange
                             }
-                            placeholder="Search products..."
+                            placeholder={t(
+                                "shop.searchPlaceholder"
+                            )}
+                            aria-label={t(
+                                "shop.searchProducts"
+                            )}
                             className="border border-[#ececec] px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
                         />
 
@@ -252,98 +279,124 @@ export default function Shop() {
                             onChange={
                                 handleSortChange
                             }
+                            aria-label={t(
+                                "shop.sortProducts"
+                            )}
                             className="border border-[#ececec] bg-white px-4 py-3 text-sm outline-none focus:border-[#23a6f0]"
                         >
                             <option value="">
-                                Sort
+                                {t(
+                                    "shop.sort"
+                                )}
                             </option>
 
                             <option value="price:asc">
-                                Price: Low to High
+                                {t(
+                                    "shop.priceLowToHigh"
+                                )}
                             </option>
 
                             <option value="price:desc">
-                                Price: High to Low
+                                {t(
+                                    "shop.priceHighToLow"
+                                )}
                             </option>
 
                             <option value="rating:asc">
-                                Rating: Low to High
+                                {t(
+                                    "shop.ratingLowToHigh"
+                                )}
                             </option>
 
                             <option value="rating:desc">
-                                Rating: High to Low
+                                {t(
+                                    "shop.ratingHighToLow"
+                                )}
                             </option>
                         </select>
-
                     </div>
-
                 </div>
 
                 {/* LOADING */}
                 {fetchState ===
                     "FETCHING" && (
-                        <div className="flex min-h-[300px] items-center justify-center">
-                            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]" />
-                        </div>
-                    )}
+                    <div className="flex min-h-[300px] items-center justify-center">
+                        <div
+                            className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5e5e5] border-t-[#23a6f0]"
+                            role="status"
+                            aria-label={t(
+                                "common.loading"
+                            )}
+                        />
+                    </div>
+                )}
 
                 {/* ERROR */}
                 {fetchState ===
                     "FAILED" && (
-                        <div className="flex flex-col items-center gap-4 py-20 text-center text-red-500">
-                            <p>Products could not be loaded.</p>
-                            <button
-                                type="button"
-                                onClick={() => dispatch(fetchProducts({ category, filter, sort, limit, offset }))}
-                                className="bg-[#23a6f0] px-5 py-3 text-sm font-bold text-white"
-                            >
-                                Try Again
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex flex-col items-center gap-4 py-20 text-center text-red-500">
+                        <p>
+                            {t(
+                                "shop.loadError"
+                            )}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                dispatch(
+                                    fetchProducts(
+                                        {
+                                            category,
+                                            filter,
+                                            sort,
+                                            limit,
+                                            offset,
+                                        }
+                                    )
+                                )
+                            }
+                            className="bg-[#23a6f0] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#1d96dc]"
+                        >
+                            {t(
+                                "common.tryAgain"
+                            )}
+                        </button>
+                    </div>
+                )}
 
                 {/* PRODUCTS */}
                 {fetchState !==
                     "FETCHING" &&
                     fetchState !==
-                    "FAILED" && (
+                        "FAILED" && (
                         <>
                             {productList.length ===
-                                0 ? (
+                            0 ? (
                                 <div className="py-20 text-center text-[#737373]">
-                                    No products found.
+                                    {t(
+                                        "shop.noProducts"
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex flex-wrap justify-center gap-4">
-
                                     {productList.map(
-                                        (product) => {
-                                            const productSlug =
-                                                createSlug(
-                                                    product.name
-                                                );
-
-                                            const productUrl =
-                                                categoryId
-                                                    ? `/shop/${gender}/${categoryName}/${categoryId}/${productSlug}/${product.id}`
-                                                    : `/product/${productSlug}/${product.id}`;
-
-                                            return (
-                                                <ProductCard
-                                                    key={
-                                                        product.id
-                                                    }
-                                                    product={
-                                                        product
-                                                    }
-                                                    productUrl={
-                                                        productUrl
-                                                    }
-                                                />
-                                            );
-                                        }
+                                        (
+                                            product
+                                        ) => (
+                                            <ProductCard
+                                                key={
+                                                    product.id
+                                                }
+                                                product={
+                                                    product
+                                                }
+                                                productUrl={getProductUrl(
+                                                    product
+                                                )}
+                                            />
+                                        )
                                     )}
-
                                 </div>
                             )}
                         </>
@@ -352,11 +405,9 @@ export default function Shop() {
                 {/* PAGINATION */}
                 {totalPages > 1 &&
                     fetchState !==
-                    "FETCHING" && (
+                        "FETCHING" && (
                         <div className="flex justify-center pt-12">
-
                             <div className="flex overflow-x-auto border border-[#ececec] text-xs">
-
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -368,13 +419,16 @@ export default function Shop() {
                                         currentPage ===
                                         1
                                     }
-                                    className={`px-4 py-3 ${currentPage ===
-                                            1
+                                    className={`px-4 py-3 ${
+                                        currentPage ===
+                                        1
                                             ? "cursor-not-allowed text-[#bdbdbd]"
                                             : "text-[#23a6f0] hover:bg-[#f5f5f5]"
-                                        }`}
+                                    }`}
                                 >
-                                    First
+                                    {t(
+                                        "pagination.first"
+                                    )}
                                 </button>
 
                                 <button
@@ -382,24 +436,29 @@ export default function Shop() {
                                     onClick={() =>
                                         handlePageChange(
                                             currentPage -
-                                            1
+                                                1
                                         )
                                     }
                                     disabled={
                                         currentPage ===
                                         1
                                     }
-                                    className={`px-4 py-3 ${currentPage ===
-                                            1
+                                    className={`px-4 py-3 ${
+                                        currentPage ===
+                                        1
                                             ? "cursor-not-allowed text-[#bdbdbd]"
                                             : "text-[#23a6f0] hover:bg-[#f5f5f5]"
-                                        }`}
+                                    }`}
                                 >
-                                    Previous
+                                    {t(
+                                        "pagination.previous"
+                                    )}
                                 </button>
 
                                 {getPageNumbers().map(
-                                    (page) => (
+                                    (
+                                        page
+                                    ) => (
                                         <button
                                             key={
                                                 page
@@ -410,13 +469,22 @@ export default function Shop() {
                                                     page
                                                 )
                                             }
-                                            className={`px-4 py-3 ${page ===
-                                                    currentPage
+                                            aria-current={
+                                                page ===
+                                                currentPage
+                                                    ? "page"
+                                                    : undefined
+                                            }
+                                            className={`px-4 py-3 ${
+                                                page ===
+                                                currentPage
                                                     ? "bg-[#23a6f0] font-bold text-white"
                                                     : "text-[#252b42] hover:bg-[#f5f5f5]"
-                                                }`}
+                                            }`}
                                         >
-                                            {page}
+                                            {
+                                                page
+                                            }
                                         </button>
                                     )
                                 )}
@@ -426,20 +494,23 @@ export default function Shop() {
                                     onClick={() =>
                                         handlePageChange(
                                             currentPage +
-                                            1
+                                                1
                                         )
                                     }
                                     disabled={
                                         currentPage ===
                                         totalPages
                                     }
-                                    className={`px-4 py-3 ${currentPage ===
-                                            totalPages
+                                    className={`px-4 py-3 ${
+                                        currentPage ===
+                                        totalPages
                                             ? "cursor-not-allowed text-[#bdbdbd]"
                                             : "text-[#23a6f0] hover:bg-[#f5f5f5]"
-                                        }`}
+                                    }`}
                                 >
-                                    Next
+                                    {t(
+                                        "pagination.next"
+                                    )}
                                 </button>
 
                                 <button
@@ -453,22 +524,21 @@ export default function Shop() {
                                         currentPage ===
                                         totalPages
                                     }
-                                    className={`px-4 py-3 ${currentPage ===
-                                            totalPages
+                                    className={`px-4 py-3 ${
+                                        currentPage ===
+                                        totalPages
                                             ? "cursor-not-allowed text-[#bdbdbd]"
                                             : "text-[#23a6f0] hover:bg-[#f5f5f5]"
-                                        }`}
+                                    }`}
                                 >
-                                    Last
+                                    {t(
+                                        "pagination.last"
+                                    )}
                                 </button>
-
                             </div>
-
                         </div>
                     )}
-
             </div>
-
         </div>
     );
 }

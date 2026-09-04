@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 import { signup } from "../api/auth";
 import { getRoles } from "../redux/thunks/clientThunks";
 
 function SignUp() {
+    const { t } = useTranslation();
     const [submitError, setSubmitError] = useState("");
 
     const navigate = useNavigate();
@@ -93,11 +95,13 @@ function SignUp() {
 
             await signup(formData);
 
-            const message =
-                "You need to click link in email to activate your account!";
+            const message = t("signup.activationMessage");
 
             toast.success(message);
-            navigate(location.state?.from || "/", { replace: true });
+            navigate(
+                location.state?.from || "/",
+                { replace: true }
+            );
         } catch (error) {
             console.error(
                 "Signup failed:",
@@ -107,7 +111,7 @@ function SignUp() {
             const message =
                 error.response?.data?.message ||
                 error.response?.data?.error ||
-                "Signup failed. Please try again.";
+                t("signup.signupFailed");
 
             setSubmitError(message);
             toast.error(message);
@@ -131,17 +135,15 @@ function SignUp() {
                     {/* HEADER */}
                     <div className="mb-10 text-center">
                         <p className="mb-4 text-xs font-bold tracking-wide text-[#23a6f0]">
-                            JOIN US
+                            {t("signup.eyebrow")}
                         </p>
 
                         <h1 className="mb-4 text-[32px] font-bold leading-10 text-[#252b42] md:text-[40px] md:leading-[50px]">
-                            Create your account
+                            {t("signup.title")}
                         </h1>
 
                         <p className="mx-auto max-w-[420px] text-sm leading-6 text-[#737373]">
-                            Create an account to discover products,
-                            manage your orders and enjoy a better
-                            shopping experience.
+                            {t("signup.description")}
                         </p>
                     </div>
 
@@ -167,22 +169,22 @@ function SignUp() {
                                     htmlFor="name"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Name
+                                    {t("signup.name")}
                                 </label>
 
                                 <input
                                     id="name"
                                     type="text"
-                                    placeholder="Your name"
+                                    placeholder={t("signup.yourName")}
                                     autoComplete="name"
                                     disabled={isSubmitting}
                                     {...register("name", {
                                         required:
-                                            "Name is required",
+                                            t("validation.nameRequired"),
                                         minLength: {
                                             value: 3,
                                             message:
-                                                "Name must be at least 3 characters",
+                                                t("validation.nameMinLength"),
                                         },
                                     })}
                                     className={inputClass(
@@ -203,23 +205,23 @@ function SignUp() {
                                     htmlFor="email"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Email
+                                    {t("signup.email")}
                                 </label>
 
                                 <input
                                     id="email"
                                     type="email"
-                                    placeholder="Your email"
+                                    placeholder={t("signup.yourEmail")}
                                     autoComplete="email"
                                     disabled={isSubmitting}
                                     {...register("email", {
                                         required:
-                                            "Email is required",
+                                            t("validation.emailRequired"),
                                         pattern: {
                                             value:
                                                 /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                                             message:
-                                                "Please enter a valid email",
+                                                t("validation.invalidEmail"),
                                         },
                                     })}
                                     className={inputClass(
@@ -240,28 +242,28 @@ function SignUp() {
                                     htmlFor="password"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Password
+                                    {t("signup.password")}
                                 </label>
 
                                 <input
                                     id="password"
                                     type="password"
-                                    placeholder="Create a password"
+                                    placeholder={t("signup.createPassword")}
                                     autoComplete="new-password"
                                     disabled={isSubmitting}
                                     {...register("password", {
                                         required:
-                                            "Password is required",
+                                            t("validation.passwordRequired"),
                                         minLength: {
                                             value: 8,
                                             message:
-                                                "Password must be at least 8 characters",
+                                                t("validation.passwordMinLength"),
                                         },
                                         pattern: {
                                             value:
                                                 /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/,
                                             message:
-                                                "Password must include number, lowercase, uppercase and special character",
+                                                t("validation.passwordComplexity"),
                                         },
                                     })}
                                     className={inputClass(
@@ -282,27 +284,27 @@ function SignUp() {
                                     htmlFor="passwordValidation"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Confirm Password
+                                    {t("signup.confirmPassword")}
                                 </label>
 
                                 <input
                                     id="passwordValidation"
                                     type="password"
-                                    placeholder="Repeat your password"
+                                    placeholder={t("signup.repeatPassword")}
                                     autoComplete="new-password"
                                     disabled={isSubmitting}
                                     {...register(
                                         "passwordValidation",
                                         {
                                             required:
-                                                "Please confirm your password",
+                                                t("validation.confirmPasswordRequired"),
                                             validate: (
                                                 value,
                                                 formValues
                                             ) =>
                                                 value ===
                                                 formValues.password ||
-                                                "Passwords do not match",
+                                                t("validation.passwordsDoNotMatch"),
                                         }
                                     )}
                                     className={inputClass(
@@ -327,7 +329,7 @@ function SignUp() {
                                     htmlFor="role_id"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Account Type
+                                    {t("signup.accountType")}
                                 </label>
 
                                 <select
@@ -338,7 +340,7 @@ function SignUp() {
                                     }
                                     {...register("role_id", {
                                         required:
-                                            "Role is required",
+                                            t("validation.roleRequired"),
                                     })}
                                     className={inputClass(
                                         errors.role_id
@@ -346,8 +348,8 @@ function SignUp() {
                                 >
                                     <option value="">
                                         {roles.length === 0
-                                            ? "Loading account types..."
-                                            : "Select account type"}
+                                            ? t("signup.loadingAccountTypes")
+                                            : t("signup.selectAccountType")}
                                     </option>
 
                                     {roles.map((role) => (
@@ -355,9 +357,10 @@ function SignUp() {
                                             key={role.id}
                                             value={role.id}
                                         >
-                                            {role.name}
+                                            {t(`roles.${role.code}`)}
                                         </option>
                                     ))}
+
                                 </select>
 
                                 {errors.role_id && (
@@ -372,12 +375,11 @@ function SignUp() {
                                 <div className="mt-2 border-t border-[#eeeeee] pt-6">
                                     <div className="mb-5">
                                         <h2 className="text-lg font-bold text-[#252b42]">
-                                            Store Information
+                                            {t("signup.storeInformation")}
                                         </h2>
 
                                         <p className="mt-1 text-xs leading-5 text-[#737373]">
-                                            Please provide your store
-                                            details to continue.
+                                            {t("signup.storeDescription")}
                                         </p>
                                     </div>
 
@@ -389,23 +391,23 @@ function SignUp() {
                                                 htmlFor="storeName"
                                                 className="mb-2 block text-xs font-bold"
                                             >
-                                                Store Name
+                                                {t("signup.storeName")}
                                             </label>
 
                                             <input
                                                 id="storeName"
                                                 type="text"
-                                                placeholder="Your store name"
+                                                placeholder={t("signup.yourStoreName")}
                                                 disabled={isSubmitting}
                                                 {...register(
                                                     "store.name",
                                                     {
                                                         required:
-                                                            "Store name is required",
+                                                            t("validation.storeNameRequired"),
                                                         minLength: {
                                                             value: 3,
                                                             message:
-                                                                "Store name must be at least 3 characters",
+                                                                t("validation.storeNameMinLength"),
                                                         },
                                                     }
                                                 )}
@@ -432,24 +434,24 @@ function SignUp() {
                                                 htmlFor="storePhone"
                                                 className="mb-2 block text-xs font-bold"
                                             >
-                                                Store Phone
+                                                {t("signup.storePhone")}
                                             </label>
 
                                             <input
                                                 id="storePhone"
                                                 type="tel"
-                                                placeholder="05551234567"
+                                                placeholder={t("signup.storePhonePlaceholder")}
                                                 disabled={isSubmitting}
                                                 {...register(
                                                     "store.phone",
                                                     {
                                                         required:
-                                                            "Store phone is required",
+                                                            t("validation.storePhoneRequired"),
                                                         pattern: {
                                                             value:
                                                                 /^(?:\+90|90|0)?5\d{9}$/,
                                                             message:
-                                                                "Please enter a valid Türkiye phone number",
+                                                                t("validation.invalidTurkishPhone"),
                                                         },
                                                     }
                                                 )}
@@ -476,24 +478,24 @@ function SignUp() {
                                                 htmlFor="taxNo"
                                                 className="mb-2 block text-xs font-bold"
                                             >
-                                                Store Tax ID
+                                                {t("signup.storeTaxId")}
                                             </label>
 
                                             <input
                                                 id="taxNo"
                                                 type="text"
-                                                placeholder="T1234V123456"
+                                                placeholder={t("signup.taxIdPlaceholder")}
                                                 disabled={isSubmitting}
                                                 {...register(
                                                     "store.tax_no",
                                                     {
                                                         required:
-                                                            "Tax ID is required",
+                                                            t("validation.taxIdRequired"),
                                                         pattern: {
                                                             value:
                                                                 /^T\d{4}V\d{6}$/,
                                                             message:
-                                                                "Tax ID must be TXXXXVXXXXXX",
+                                                                t("validation.taxIdFormat"),
                                                         },
                                                     }
                                                 )}
@@ -520,19 +522,19 @@ function SignUp() {
                                                 htmlFor="bankAccount"
                                                 className="mb-2 block text-xs font-bold"
                                             >
-                                                Store Bank Account
+                                                {t("signup.storeBankAccount")}
                                             </label>
 
                                             <input
                                                 id="bankAccount"
                                                 type="text"
-                                                placeholder="TR000000000000000000000000"
+                                                placeholder={t("signup.ibanPlaceholder")}
                                                 disabled={isSubmitting}
                                                 {...register(
                                                     "store.bank_account",
                                                     {
                                                         required:
-                                                            "Bank account is required",
+                                                            t("validation.bankAccountRequired"),
                                                         validate: (
                                                             value
                                                         ) => {
@@ -548,7 +550,7 @@ function SignUp() {
                                                                 /^TR\d{24}$/.test(
                                                                     iban
                                                                 ) ||
-                                                                "Please enter a valid Turkish IBAN"
+                                                                t("validation.invalidTurkishIban")
                                                             );
                                                         },
                                                     }
@@ -584,20 +586,26 @@ function SignUp() {
                                 }
                                 className="mt-2 flex min-h-12 items-center justify-center rounded-md bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d96dc] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {isSubmitting
-                                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating Account...</>
-                                    : "Sign Up"}
+                                {isSubmitting ? (
+                                    <>
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                                        {t("signup.creatingAccount")}
+                                    </>
+                                ) : (
+                                    t("signup.submit")
+                                )}
                             </button>
                         </form>
 
                         {/* LOGIN LINK */}
                         <p className="mt-6 text-center text-sm text-[#737373]">
-                            Already have an account?{" "}
+                            {t("signup.alreadyHaveAccount")}{" "}
+
                             <Link
                                 to="/login"
                                 className="font-bold text-[#23a6f0] hover:underline"
                             >
-                                Login
+                                {t("auth.login")}
                             </Link>
                         </p>
                     </div>

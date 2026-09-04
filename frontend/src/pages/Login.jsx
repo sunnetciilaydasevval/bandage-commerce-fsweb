@@ -1,11 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 import { loginUser } from "../redux/thunks/clientThunks";
 
 function Login() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -38,7 +40,7 @@ function Login() {
             );
 
             toast.success(
-                "Login successful!"
+                t("auth.loginSuccess")
             );
 
             /*
@@ -84,16 +86,15 @@ function Login() {
                     {/* HEADER */}
                     <div className="mb-10 text-center">
                         <p className="mb-4 text-xs font-bold tracking-wide text-[#23a6f0]">
-                            WELCOME BACK
+                            {t("auth.welcomeBack")}
                         </p>
 
                         <h1 className="mb-4 text-[32px] font-bold leading-10 text-[#252b42] md:text-[40px] md:leading-[50px]">
-                            Login to your account
+                            {t("auth.loginToAccount")}
                         </h1>
 
                         <p className="mx-auto max-w-[400px] text-sm leading-6 text-[#737373]">
-                            Welcome back. Sign in to continue
-                            shopping and manage your account.
+                            {t("auth.welcomeBackDescription")}
                         </p>
                     </div>
 
@@ -111,23 +112,23 @@ function Login() {
                                     htmlFor="email"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Email
+                                    {t("auth.email")}
                                 </label>
 
                                 <input
                                     id="email"
                                     type="email"
-                                    placeholder="Your email"
+                                    placeholder={t("auth.yourEmail")}
                                     autoComplete="email"
                                     disabled={isSubmitting}
                                     {...register("email", {
                                         required:
-                                            "Email is required",
+                                            t("validation.emailRequired"),
                                         pattern: {
                                             value:
                                                 /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                                             message:
-                                                "Please enter a valid email",
+                                                t("validation.invalidEmail"),
                                         },
                                     })}
                                     className={inputClass(
@@ -148,18 +149,18 @@ function Login() {
                                     htmlFor="password"
                                     className="mb-2 block text-xs font-bold text-[#252b42]"
                                 >
-                                    Password
+                                    {t("auth.password")}
                                 </label>
 
                                 <input
                                     id="password"
                                     type="password"
-                                    placeholder="Your password"
+                                    placeholder={t("auth.yourPassword")}
                                     autoComplete="current-password"
                                     disabled={isSubmitting}
                                     {...register("password", {
                                         required:
-                                            "Password is required",
+                                            t("validation.passwordRequired"),
                                     })}
                                     className={inputClass(
                                         errors.password
@@ -186,19 +187,19 @@ function Login() {
                                         className="h-4 w-4 accent-[#23a6f0]"
                                     />
 
-                                    Remember me
+                                    {t("auth.rememberMe")}
                                 </label>
 
                                 <button
                                     type="button"
                                     onClick={() =>
                                         toast.info(
-                                            "Forgot password is not available yet."
+                                            t("header.forgotPasswordUnavailable")
                                         )
                                     }
                                     className="font-bold text-[#23a6f0] hover:underline"
                                 >
-                                    Forgot password?
+                                    {t("header.forgotPassword")}
                                 </button>
 
                             </div>
@@ -210,21 +211,21 @@ function Login() {
                                 className="mt-2 flex min-h-12 items-center justify-center rounded-md bg-[#23a6f0] px-8 py-3 text-xs font-bold text-white transition-colors hover:bg-[#1d96dc] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {isSubmitting
-                                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Logging in...</>
-                                    : "Login"}
+                                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> {t("auth.loggingIn")}</>
+                                    : t("auth.login")}
                             </button>
 
                         </form>
 
                         {/* SIGNUP */}
                         <p className="mt-6 text-center text-sm text-[#737373]">
-                            Don't have an account?{" "}
+                            {t("auth.dontHaveAccount")}{" "}
 
                             <Link
                                 to="/signup"
                                 className="font-bold text-[#23a6f0] hover:underline"
                             >
-                                Sign Up
+                                {t("auth.signup")}
                             </Link>
                         </p>
 
